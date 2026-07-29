@@ -1,0 +1,1138 @@
+<title>Экономика аренды опалубки</title>
+<style>
+:root{
+  color-scheme: light;
+  --bg:#F3F4F1; --surface:#FFFFFF; --surface-2:#ECEEEA; --surface-3:#E3E6E1;
+  --ink:#14181A; --ink-2:#4B534E; --ink-muted:#838A83;
+  --border:rgba(20,24,26,0.12); --border-strong:rgba(20,24,26,0.22);
+  --accent:#2a78d6; --accent-ink:#ffffff; --accent2:#B5651D;
+  --chart-surface:#fcfcfb; --gridline:#e1e0d9; --baseline:#c3c2b7;
+  --div-pos:#2a78d6; --div-neg:#e34948; --div-mid:#f0efec;
+  --good:#0ca30c; --critical:#d03b3b;
+  --radius:10px; --radius-sm:6px;
+  --font-ui: system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono: ui-monospace,"Cascadia Mono","Consolas","SFMono-Regular",monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#12161A; --surface:#1A2024; --surface-2:#202830; --surface-3:#242C34;
+    --ink:#ECEFEC; --ink-2:#A9B2AC; --ink-muted:#7C8680;
+    --border:rgba(255,255,255,0.12); --border-strong:rgba(255,255,255,0.22);
+    --accent:#3987e5; --accent-ink:#08131f; --accent2:#D98F52;
+    --chart-surface:#1a1a19; --gridline:#2c2c2a; --baseline:#383835;
+    --div-pos:#3987e5; --div-neg:#e66767; --div-mid:#383835;
+    --good:#0ca30c; --critical:#d03b3b;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#12161A; --surface:#1A2024; --surface-2:#202830; --surface-3:#242C34;
+  --ink:#ECEFEC; --ink-2:#A9B2AC; --ink-muted:#7C8680;
+  --border:rgba(255,255,255,0.12); --border-strong:rgba(255,255,255,0.22);
+  --accent:#3987e5; --accent-ink:#08131f; --accent2:#D98F52;
+  --chart-surface:#1a1a19; --gridline:#2c2c2a; --baseline:#383835;
+  --div-pos:#3987e5; --div-neg:#e66767; --div-mid:#383835;
+  --good:#0ca30c; --critical:#d03b3b;
+}
+:root[data-theme="light"]{
+  color-scheme: light;
+  --bg:#F3F4F1; --surface:#FFFFFF; --surface-2:#ECEEEA; --surface-3:#E3E6E1;
+  --ink:#14181A; --ink-2:#4B534E; --ink-muted:#838A83;
+  --border:rgba(20,24,26,0.12); --border-strong:rgba(20,24,26,0.22);
+  --accent:#2a78d6; --accent-ink:#ffffff; --accent2:#B5651D;
+  --chart-surface:#fcfcfb; --gridline:#e1e0d9; --baseline:#c3c2b7;
+  --div-pos:#2a78d6; --div-neg:#e34948; --div-mid:#f0efec;
+  --good:#0ca30c; --critical:#d03b3b;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--font-ui);
+  font-size:14px; line-height:1.45; -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{text-wrap:balance; margin:0;}
+.app{max-width:1360px;margin:0 auto;padding:28px 24px 80px;}
+header.top{margin-bottom:20px;}
+header.top h1{font-size:24px;font-weight:700;letter-spacing:-0.01em;}
+header.top p{margin:6px 0 0;color:var(--ink-2);font-size:13.5px;max-width:74ch;}
+.tabs{display:flex;gap:4px;margin:20px 0 20px;border-bottom:1px solid var(--border);}
+.tab-btn{
+  appearance:none;border:none;background:none;color:var(--ink-muted);
+  font:inherit;font-weight:600;font-size:13px;letter-spacing:0.01em;
+  padding:10px 16px;cursor:pointer;border-bottom:2px solid transparent;
+  transform:translateY(1px);
+}
+.tab-btn[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);}
+.tab-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+section.panel{display:none;}
+section.panel.active{display:block;}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;}
+.card + .card{margin-top:16px;}
+.card h2{font-size:12px;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-2);font-weight:700;margin-bottom:14px;}
+.card h2 .hint{text-transform:none;letter-spacing:0;color:var(--ink-muted);font-weight:400;font-size:12px;margin-left:8px;}
+
+.field-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.field-row label{width:230px;flex:0 0 auto;color:var(--ink-2);font-size:13px;}
+.field-row input[type=number]{width:140px;}
+input[type=number],input[type=text]{
+  font:inherit;font-family:var(--font-mono);font-size:13.5px;color:var(--ink);
+  background:var(--bg);border:1px solid var(--border-strong);border-radius:var(--radius-sm);
+  padding:6px 8px; font-variant-numeric:tabular-nums;
+}
+input[type=text]{font-family:var(--font-ui);}
+input:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+.unit{color:var(--ink-muted);font-size:12.5px;}
+
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);}
+table.datatable{border-collapse:collapse;width:100%;font-size:13px;}
+table.datatable th,table.datatable td{padding:6px 10px;border-bottom:1px solid var(--border);white-space:nowrap;}
+table.datatable thead th{background:var(--surface-2);color:var(--ink-2);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:0.04em;position:sticky;top:0;}
+table.datatable td.rowlabel,table.datatable th.rowlabel{
+  position:sticky;left:0;background:var(--surface-2);text-align:left;font-weight:600;color:var(--ink);z-index:1;min-width:200px;white-space:normal;
+}
+table.datatable input[type=text].monthlabel{width:88px;font-weight:600;}
+table.datatable input[type=number].cell{width:100px;}
+table.datatable tr.readonly td{color:var(--ink-muted);font-style:italic;}
+table.datatable tr.readonly input{color:var(--ink-muted);}
+.rowdel{background:none;border:none;color:var(--ink-muted);cursor:pointer;font-size:15px;padding:0 4px;line-height:1;}
+.rowdel:hover{color:var(--critical);}
+.addbar{display:flex;gap:8px;margin-top:12px;}
+.btn{
+  appearance:none;border:1px solid var(--border-strong);background:var(--surface-2);color:var(--ink);
+  font:inherit;font-weight:600;font-size:12.5px;padding:7px 13px;border-radius:var(--radius-sm);cursor:pointer;
+}
+.btn:hover{background:var(--surface-3);}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
+.btn.primary:hover{filter:brightness(1.06);}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+.class-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-top:4px;}
+.class-item{border:1px solid var(--border);border-radius:var(--radius);padding:14px;background:var(--surface);}
+.class-item .name{font-weight:700;font-size:13.5px;margin-bottom:2px;}
+.class-item .stats{color:var(--ink-muted);font-size:11.5px;font-family:var(--font-mono);margin:4px 0 8px;}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;letter-spacing:0.03em;text-transform:uppercase;padding:3px 8px;border-radius:99px;margin-bottom:8px;}
+.badge.b-var{background:color-mix(in srgb, var(--div-pos) 16%, transparent);color:var(--div-pos);}
+.badge.b-step{background:color-mix(in srgb, var(--accent2) 18%, transparent);color:var(--accent2);}
+.badge.b-fixed{background:var(--surface-3);color:var(--ink-2);}
+.badge.b-none{background:var(--surface-3);color:var(--ink-muted);}
+.class-item select{font:inherit;font-size:12.5px;padding:5px 6px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--bg);color:var(--ink);width:100%;margin-bottom:8px;}
+.class-item .params{display:flex;flex-direction:column;gap:6px;}
+.class-item .params .row{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-2);}
+.class-item .params input[type=number]{width:100px;}
+.class-item .params .radios{display:flex;gap:10px;font-size:12px;}
+.spark{display:block;margin:6px 0;}
+.note{font-size:11.5px;color:var(--ink-muted);margin-top:6px;}
+.note.warn{color:var(--critical);}
+
+.transfer-bar{display:flex;justify-content:flex-end;align-items:center;gap:12px;margin-top:18px;}
+.transfer-bar .msg{font-size:12.5px;color:var(--ink-muted);}
+
+/* ---- calculator tab ---- */
+.calc-grid{display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start;}
+@media (max-width:900px){.calc-grid{grid-template-columns:1fr;}}
+.sidebar .card h2{display:flex;align-items:center;justify-content:space-between;}
+.slider-row{margin-bottom:6px;}
+.slider-row .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;}
+.slider-row .top .val{font-family:var(--font-mono);font-weight:700;font-variant-numeric:tabular-nums;}
+input[type=range]{width:100%;accent-color:var(--accent);}
+.dyn-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;}
+.dyn-row input[type=text]{flex:1 1 110px;min-width:90px;}
+.dyn-row input[type=number]{width:88px;}
+.dyn-row .rowdel{margin-left:auto;}
+.basis-toggle{display:flex;border:1px solid var(--border-strong);border-radius:var(--radius-sm);overflow:hidden;font-size:11px;}
+.basis-toggle button{border:none;background:var(--surface-2);color:var(--ink-2);padding:5px 7px;cursor:pointer;font:inherit;font-weight:600;}
+.basis-toggle button.on{background:var(--accent);color:var(--accent-ink);}
+.total-line{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-2);margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);font-family:var(--font-mono);font-variant-numeric:tabular-nums;}
+
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+@media (max-width:900px){.kpi-row{grid-template-columns:repeat(2,1fr);}}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px;}
+.kpi .label{font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--ink-muted);font-weight:600;margin-bottom:6px;}
+.kpi .value{font-family:var(--font-mono);font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;}
+.kpi .sub{font-size:11.5px;color:var(--ink-muted);margin-top:4px;}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;margin-top:6px;}
+.pill.good{background:color-mix(in srgb, var(--good) 16%, transparent);color:var(--good);}
+.pill.bad{background:color-mix(in srgb, var(--critical) 16%, transparent);color:var(--critical);}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block;}
+
+.chart-card{background:var(--chart-surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:16px;position:relative;}
+.chart-card h3{font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-2);font-weight:700;margin-bottom:2px;}
+.chart-card .desc{font-size:12px;color:var(--ink-muted);margin-bottom:10px;}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.chip{font-family:var(--font-mono);font-size:11px;font-weight:700;padding:3px 8px;border-radius:99px;display:inline-flex;align-items:center;gap:4px;}
+.chip.up{background:color-mix(in srgb, var(--good) 16%, transparent);color:var(--good);}
+.chip.down{background:color-mix(in srgb, var(--critical) 16%, transparent);color:var(--critical);}
+
+#tooltip{
+  position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);
+  font-size:11.5px;padding:7px 9px;border-radius:6px;font-family:var(--font-mono);
+  transform:translate(-50%,calc(-100% - 10px));white-space:nowrap;opacity:0;transition:opacity .08s;z-index:50;
+  line-height:1.5;
+}
+#tooltip.show{opacity:1;}
+#tooltip b{font-family:var(--font-ui);}
+
+.hm-wrap{overflow-x:auto;}
+table.heat{border-collapse:separate;border-spacing:2px;font-size:11.5px;font-family:var(--font-mono);width:100%;}
+table.heat th{color:var(--ink-muted);font-weight:600;font-size:10.5px;padding:4px 6px;text-align:center;}
+table.heat th.corner{background:none;}
+table.heat td{padding:6px 4px;text-align:center;border-radius:4px;cursor:default;font-variant-numeric:tabular-nums;}
+table.heat td.info{background:var(--surface-2);color:var(--ink-2);font-weight:600;text-align:left;padding-left:8px;}
+table.heat td.be{font-weight:700;background:var(--surface-3);color:var(--ink);}
+table.heat tr.current td.info{outline:2px solid var(--accent);outline-offset:-2px;}
+table.heat td.current-col{outline:2px solid var(--accent);outline-offset:-2px;}
+.legend{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:11px;color:var(--ink-muted);}
+.legend .bar{height:8px;flex:1;max-width:220px;border-radius:99px;background:linear-gradient(90deg,var(--div-neg),var(--div-mid),var(--div-pos));}
+
+.warnbox{background:color-mix(in srgb, var(--critical) 10%, var(--surface));border:1px solid color-mix(in srgb, var(--critical) 35%, var(--border));color:var(--critical);border-radius:var(--radius-sm);padding:8px 11px;font-size:12px;margin-top:8px;}
+</style>
+
+<div class="app">
+  <header class="top">
+    <h1>Экономика аренды опалубки</h1>
+    <p>Вкладка 1 — фактические ежемесячные данные и их разнесение на переменные / ступенчатые / постоянные затраты. Вкладка 2 — калькулятор «что если»: меняете цену и загрузку, видите выручку, затраты, прибыль и точку безубыточности.</p>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab-btn" role="tab" id="tabbtn-data" aria-selected="true" aria-controls="panel-data">1. Данные и классификация</button>
+    <button class="tab-btn" role="tab" id="tabbtn-calc" aria-selected="false" aria-controls="panel-calc">2. Калькулятор</button>
+  </div>
+
+  <section class="panel active" id="panel-data" role="tabpanel" aria-labelledby="tabbtn-data">
+
+    <div class="card">
+      <h2>Парк оборудования</h2>
+      <div class="field-row">
+        <label for="fleetTons">Общий парк оборудования</label>
+        <input type="number" id="fleetTons" value="8000" min="0" step="10">
+        <span class="unit">тонн</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Ежемесячные факты <span class="hint">выручка, тонны в аренде и статьи затрат по месяцам — введите свои цифры</span></h2>
+      <div class="table-wrap">
+        <table class="datatable" id="monthTable"></table>
+      </div>
+      <div class="addbar">
+        <button class="btn" id="addMonthBtn">+ Месяц</button>
+        <button class="btn" id="addCostRowBtn">+ Статья затрат</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Классификация затрат <span class="hint">по каждой статье — корреляция с объёмом, предположение алгоритма, параметры для калькулятора</span></h2>
+      <div class="class-grid" id="classGrid"></div>
+    </div>
+
+    <div class="transfer-bar">
+      <span class="msg" id="transferMsg"></span>
+      <button class="btn primary" id="transferBtn">Перенести в калькулятор →</button>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-calc" role="tabpanel" aria-labelledby="tabbtn-calc">
+    <div class="calc-grid">
+      <aside class="sidebar">
+        <div class="card">
+          <h2>Параметры</h2>
+          <div class="slider-row">
+            <div class="top"><span>Парк, тонн</span><span class="val" id="v-fleet">8000</span></div>
+            <input type="number" id="c-fleet" value="8000" min="0" step="10">
+          </div>
+          <div class="slider-row">
+            <div class="top"><span>Ставка, ₽/тонну/сутки</span><span class="val" id="v-rate">70</span></div>
+            <input type="range" id="c-rate-range" min="0" max="500" step="1" value="70">
+            <input type="number" id="c-rate" value="70" min="0" step="1">
+          </div>
+          <div class="slider-row">
+            <div class="top"><span>Загрузка</span><span class="val" id="v-util">50.0%</span></div>
+            <input type="range" id="c-util-range" min="0" max="100" step="0.1" value="50">
+            <input type="number" id="c-util" value="50" min="0" max="100" step="0.1">
+          </div>
+          <div class="field-row" style="margin-top:8px;">
+            <label for="c-days">Дней в периоде</label>
+            <input type="number" id="c-days" value="30" min="1" max="31" step="1">
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Переменные затраты <span class="hint">% от выручки или ₽/тонну в аренде</span></h2>
+          <div id="varRows"></div>
+          <button class="btn" id="addVarBtn">+ Статья</button>
+          <div class="total-line"><span>Итого при текущих цене/загрузке</span><span id="varTotal">—</span></div>
+        </div>
+
+        <div class="card">
+          <h2>Ступенчатые затраты <span class="hint">растут скачком при превышении порога тонн в аренде</span></h2>
+          <div id="stepRows"></div>
+          <button class="btn" id="addStepBtn">+ Статья</button>
+          <div class="total-line"><span>Итого при текущей загрузке</span><span id="stepTotal">—</span></div>
+        </div>
+
+        <div class="card">
+          <h2>Постоянные издержки <span class="hint">не зависят от объёма</span></h2>
+          <div id="fixedRows"></div>
+          <button class="btn" id="addFixedBtn">+ Статья</button>
+          <div class="total-line"><span>Итого</span><span id="fixedTotal">—</span></div>
+        </div>
+      </aside>
+
+      <main>
+        <div class="kpi-row">
+          <div class="kpi"><div class="label">Выручка</div><div class="value" id="k-revenue">—</div></div>
+          <div class="kpi"><div class="label">Переменные затраты</div><div class="value" id="k-var">—</div></div>
+          <div class="kpi"><div class="label">Ступенчатые затраты</div><div class="value" id="k-step">—</div></div>
+          <div class="kpi"><div class="label">Постоянные издержки</div><div class="value" id="k-fixed">—</div></div>
+          <div class="kpi"><div class="label">Итого затрат</div><div class="value" id="k-total">—</div></div>
+          <div class="kpi"><div class="label">Прибыль / убыток</div><div class="value" id="k-profit">—</div><div id="k-pill"></div></div>
+          <div class="kpi"><div class="label">Безубыточность по загрузке<br>(при текущей цене)</div><div class="value" id="k-be-util">—</div></div>
+          <div class="kpi"><div class="label">Безубыточность по цене<br>(при текущей загрузке)</div><div class="value" id="k-be-rate">—</div></div>
+        </div>
+
+        <div class="chart-card">
+          <h3>Прибыль в зависимости от загрузки</h3>
+          <div class="desc">При текущей цене — как меняется прибыль от 0 до 100% загрузки. Пунктир — пороги ступенчатых затрat. Точка — текущее положение.</div>
+          <svg id="lineChart" viewBox="0 0 960 320" width="100%" style="display:block;overflow:visible;"></svg>
+          <div class="chips" id="crossChips"></div>
+        </div>
+
+        <div class="chart-card">
+          <h3>Прибыль/убыток: цена × загрузка</h3>
+          <div class="desc">Столбец «Цена безубыточности» — точный расчёт. Остальные ячейки — прибыль (или убыток) в рублях при данной комбинации цены и загрузки.</div>
+          <div class="hm-wrap"><table class="heat" id="heatTable"></table></div>
+          <div class="legend"><span>Убыток</span><div class="bar"></div><span>Прибыль</span></div>
+        </div>
+      </main>
+    </div>
+  </section>
+</div>
+<div id="tooltip"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- theme-aware colors ---------- */
+function theme(){
+  const el = document.documentElement;
+  const cs = getComputedStyle(el);
+  const g = (name)=>cs.getPropertyValue(name).trim();
+  return {
+    divPos:g('--div-pos'), divNeg:g('--div-neg'), divMid:g('--div-mid'),
+    good:g('--good'), critical:g('--critical'), ink:g('--ink'), ink2:g('--ink-2'),
+    inkMuted:g('--ink-muted'), gridline:g('--gridline'), baseline:g('--baseline'),
+    accent:g('--accent'), surface3:g('--surface-3')
+  };
+}
+function hexToRgb(hex){
+  hex = hex.trim();
+  if(hex[0]!=='#'){ // fallback for rgb() strings, unlikely here
+    const m = hex.match(/\d+/g); return m? m.slice(0,3).map(Number):[0,0,0];
+  }
+  const h = hex.replace('#','');
+  const full = h.length===3 ? h.split('').map(c=>c+c).join('') : h;
+  const num = parseInt(full,16);
+  return [(num>>16)&255,(num>>8)&255,num&255];
+}
+function rgbToHex(rgb){
+  return '#'+rgb.map(v=>Math.round(Math.max(0,Math.min(255,v))).toString(16).padStart(2,'0')).join('');
+}
+function mixHex(a,b,t){
+  const ra=hexToRgb(a), rb=hexToRgb(b);
+  return rgbToHex([ra[0]+(rb[0]-ra[0])*t, ra[1]+(rb[1]-ra[1])*t, ra[2]+(rb[2]-ra[2])*t]);
+}
+function divergingColor(value,maxAbs,th){
+  if(!isFinite(value)||maxAbs<=0) return th.divMid;
+  const t = Math.max(-1,Math.min(1, value/maxAbs));
+  return t>=0 ? mixHex(th.divMid, th.divPos, t) : mixHex(th.divMid, th.divNeg, -t);
+}
+function textColorFor(hex){
+  const [r,g,b]=hexToRgb(hex);
+  const lum = 0.299*r+0.587*g+0.114*b;
+  return lum>150 ? '#14181A' : '#F5F6F4';
+}
+
+/* ---------- formatting ---------- */
+const nf0 = new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0});
+const nf1 = new Intl.NumberFormat('ru-RU',{maximumFractionDigits:1});
+function fmtRub(v){ if(!isFinite(v)) return '—'; return nf0.format(Math.round(v))+' ₽'; }
+function fmtCompact(v){
+  if(!isFinite(v)) return '—';
+  const sign = v<0?'−':'';
+  const av = Math.abs(v);
+  if(av>=1e6) return sign+nf1.format(av/1e6)+' млн ₽';
+  if(av>=1e3) return sign+nf0.format(Math.round(av/1e3))+' тыс ₽';
+  return sign+nf0.format(Math.round(av))+' ₽';
+}
+function fmtTons(v){ return nf0.format(Math.round(v))+' т'; }
+let uidc = 1;
+function uid(){ return 'id'+(uidc++); }
+
+/* ---------- stats helpers ---------- */
+function mean(a){ return a.reduce((s,x)=>s+x,0)/a.length; }
+function stdev(a){ const m=mean(a); return Math.sqrt(mean(a.map(x=>(x-m)**2))); }
+function pearson(xs,ys){
+  const n=xs.length; if(n<2) return NaN;
+  const mx=mean(xs), my=mean(ys);
+  let num=0,dx2=0,dy2=0;
+  for(let i=0;i<n;i++){ const dx=xs[i]-mx, dy=ys[i]-my; num+=dx*dy; dx2+=dx*dx; dy2+=dy*dy; }
+  if(dx2===0||dy2===0) return NaN;
+  return num/Math.sqrt(dx2*dy2);
+}
+function linreg(xs,ys){
+  const n=xs.length; const mx=mean(xs), my=mean(ys);
+  let num=0,den=0;
+  for(let i=0;i<n;i++){ num+=(xs[i]-mx)*(ys[i]-my); den+=(xs[i]-mx)**2; }
+  const slope = den===0?0:num/den;
+  const intercept = my-slope*mx;
+  let ssTot=0,ssRes=0;
+  for(let i=0;i<n;i++){ const pred=slope*xs[i]+intercept; ssRes+=(ys[i]-pred)**2; ssTot+=(ys[i]-my)**2; }
+  const r2 = ssTot===0 ? (ssRes===0?1:0) : 1-ssRes/ssTot;
+  return {slope,intercept,r2};
+}
+
+/* =========================================================
+   TAB 1 — monthly data + classification
+   ========================================================= */
+const RU_MONTHS = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+function defaultMonthLabels(n){
+  const out=[]; const now=new Date();
+  for(let i=n-1;i>=0;i--){
+    const d=new Date(now.getFullYear(), now.getMonth()-i, 1);
+    out.push(RU_MONTHS[d.getMonth()]+' '+String(d.getFullYear()).slice(2));
+  }
+  return out;
+}
+const DEFAULT_COST_ITEMS = [
+  'Маркетинг','Выплаты отделу аренды','Налоги (НДС)','Ремонт','ФОТ СБ','Потери',
+  'Аренда складов','ФОТ складского персонала','ФОТ проектировщика'
+];
+
+const dataState = {
+  fleetTons: 8000,
+  months: defaultMonthLabels(6).map(label=>({id:uid(), label, revenue:0, tons:0})),
+  costItems: DEFAULT_COST_ITEMS.map(name=>({id:uid(), name})),
+  values: {}, // values[costItemId][monthId] = number
+  classification: {} // classification[costItemId] = {type, basis, varValue, threshold, stepCost, minSteps, fixedValue}
+};
+dataState.costItems.forEach(ci=>{ dataState.values[ci.id]={}; });
+
+function getCell(costId, monthId){
+  const v = dataState.values[costId] && dataState.values[costId][monthId];
+  return (v===undefined||v===''||v===null) ? null : Number(v);
+}
+function setCell(costId, monthId, v){
+  if(!dataState.values[costId]) dataState.values[costId]={};
+  dataState.values[costId][monthId] = v;
+}
+
+function renderMonthTable(){
+  const el = document.getElementById('monthTable');
+  const months = dataState.months;
+  let h = '<thead><tr><th class="rowlabel">Показатель</th>';
+  months.forEach(m=>{
+    h += '<th><input type="text" class="monthlabel" data-month="'+m.id+'" value="'+m.label+'"> '
+       + (months.length>2 ? '<button class="rowdel" data-delmonth="'+m.id+'" title="Удалить месяц">×</button>' : '') + '</th>';
+  });
+  h += '</tr></thead><tbody>';
+
+  h += '<tr data-metric="revenue"><td class="rowlabel">Выручка, ₽</td>';
+  months.forEach(m=>{ h += '<td><input type="number" class="cell" data-metric="revenue" data-month="'+m.id+'" value="'+(m.revenue||0)+'" step="1000"></td>'; });
+  h += '</tr>';
+
+  h += '<tr data-metric="tons"><td class="rowlabel">Тонны в аренде (грузооборот)</td>';
+  months.forEach(m=>{ h += '<td><input type="number" class="cell" data-metric="tons" data-month="'+m.id+'" value="'+(m.tons||0)+'" step="10"></td>'; });
+  h += '</tr>';
+
+  h += '<tr class="readonly"><td class="rowlabel">Коэфф. использования, %</td>';
+  months.forEach(m=>{
+    const pct = dataState.fleetTons>0 ? (m.tons/dataState.fleetTons*100) : 0;
+    h += '<td>'+nf1.format(pct)+'%</td>';
+  });
+  h += '</tr>';
+
+  dataState.costItems.forEach(ci=>{
+    h += '<tr><td class="rowlabel"><input type="text" class="monthlabel" style="width:170px" data-costname="'+ci.id+'" value="'+ci.name+'"> '
+       + '<button class="rowdel" data-delcost="'+ci.id+'" title="Удалить статью">×</button></td>';
+    months.forEach(m=>{
+      const v = getCell(ci.id,m.id);
+      h += '<td><input type="number" class="cell" data-cost="'+ci.id+'" data-month="'+m.id+'" value="'+(v===null?0:v)+'" step="1000"></td>';
+    });
+    h += '</tr>';
+  });
+
+  h += '</tbody>';
+  el.innerHTML = h;
+}
+
+function readMonthTableIntoState(){
+  const table = document.getElementById('monthTable');
+  table.querySelectorAll('input.monthlabel[data-month]').forEach(inp=>{
+    const m = dataState.months.find(x=>x.id===inp.dataset.month);
+    if(m) m.label = inp.value;
+  });
+  table.querySelectorAll('input.monthlabel[data-costname]').forEach(inp=>{
+    const ci = dataState.costItems.find(x=>x.id===inp.dataset.costname);
+    if(ci) ci.name = inp.value;
+  });
+  table.querySelectorAll('input.cell[data-metric="revenue"]').forEach(inp=>{
+    const m = dataState.months.find(x=>x.id===inp.dataset.month);
+    if(m) m.revenue = Number(inp.value)||0;
+  });
+  table.querySelectorAll('input.cell[data-metric="tons"]').forEach(inp=>{
+    const m = dataState.months.find(x=>x.id===inp.dataset.month);
+    if(m) m.tons = Number(inp.value)||0;
+  });
+  table.querySelectorAll('input.cell[data-cost]').forEach(inp=>{
+    setCell(inp.dataset.cost, inp.dataset.month, Number(inp.value)||0);
+  });
+}
+
+function sparkSvg(pairs, color){
+  // pairs: [{x:tons, y:cost}], sorted by x
+  const W=140,H=36,pad=3;
+  if(pairs.length<2) return '<svg class="spark" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'"></svg>';
+  const xs = pairs.map(p=>p.x), ys=pairs.map(p=>p.y);
+  const minX=Math.min(...xs), maxX=Math.max(...xs)||1;
+  const minY=Math.min(0,...ys), maxY=Math.max(...ys)||1;
+  const sx = x => pad + (maxX===minX?0.5:(x-minX)/(maxX-minX))*(W-2*pad);
+  const sy = y => H-pad - (maxY===minY?0.5:(y-minY)/(maxY-minY))*(H-2*pad);
+  let d='';
+  pairs.forEach((p,i)=>{ d += (i===0?'M':'L')+sx(p.x).toFixed(1)+','+sy(p.y).toFixed(1)+' '; });
+  let dots='';
+  pairs.forEach(p=>{ dots += '<circle cx="'+sx(p.x).toFixed(1)+'" cy="'+sy(p.y).toFixed(1)+'" r="2.2" fill="'+color+'"/>'; });
+  return '<svg class="spark" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'">'
+    + '<path d="'+d+'" fill="none" stroke="'+color+'" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>'
+    + dots + '</svg>';
+}
+
+function classify(ci){
+  const months = dataState.months;
+  const rows = months.map(m=>({tons:m.tons, revenue:m.revenue, cost:getCell(ci.id,m.id)}))
+                     .filter(r=>r.cost!==null && r.tons!==null);
+  const n = rows.length;
+  const th = theme();
+  if(n<2){
+    return {n, suggestion:'none', note:'Введите данные минимум за 2 месяца.'};
+  }
+  const tons=rows.map(r=>r.tons), revenue=rows.map(r=>r.revenue), cost=rows.map(r=>r.cost);
+  const cTons = pearson(cost,tons), cRev = pearson(cost,revenue);
+  const cv = mean(cost)!==0 ? stdev(cost)/Math.abs(mean(cost)) : 0;
+  const cvTons = mean(tons)!==0 ? stdev(tons)/Math.abs(mean(tons)) : 0;
+  const rgTons = linreg(tons,cost), rgRev = linreg(revenue,cost);
+  const meanCost = mean(cost)||0;
+
+  let suggestion='fixed', note='';
+  const lowVolumeVariance = cvTons < 0.05;
+  if(lowVolumeVariance){
+    note = 'Объём в данных почти не менялся — надёжно отличить переменные от постоянных затрат по этим месяцам нельзя. Добавьте месяцы с разной загрузкой.';
+  }
+  const tonsFit = isFinite(cTons) && Math.abs(cTons)>=0.7 && Math.abs(rgTons.intercept) < 0.35*Math.max(meanCost,1);
+  const revFit = isFinite(cRev) && Math.abs(cRev)>=0.7 && Math.abs(rgRev.intercept) < 0.35*Math.max(meanCost,1);
+
+  if(!lowVolumeVariance && tonsFit && (!revFit || rgTons.r2>=rgRev.r2)){
+    suggestion='variable';
+  } else if(!lowVolumeVariance && revFit){
+    suggestion='variable-rev';
+  } else if(cv < 0.15){
+    suggestion='fixed';
+  } else if(!lowVolumeVariance){
+    suggestion='step';
+  } else {
+    suggestion='fixed';
+  }
+
+  // jump detection for step candidate
+  let stepGuess=null;
+  const sorted = rows.slice().sort((a,b)=>a.tons-b.tons);
+  let bestJump=0, bestAt=null;
+  for(let i=1;i<sorted.length;i++){
+    const jump = sorted[i].cost - sorted[i-1].cost;
+    if(jump>bestJump){ bestJump=jump; bestAt=sorted[i]; }
+  }
+  if(bestAt && bestJump > 0.2*Math.max(meanCost,1)){
+    stepGuess = {threshold: Math.max(1,Math.round(bestAt.tons/100)*100), stepCost: Math.round(bestJump)};
+  }
+
+  return {n, cTons, cRev, cv, cvTons, rgTons, rgRev, meanCost, suggestion, note, stepGuess, rows: sorted};
+}
+
+function ensureClassDefault(ci, stat){
+  if(dataState.classification[ci.id]) return dataState.classification[ci.id];
+  let type = stat.suggestion==='variable-rev' ? 'variable' : (stat.suggestion==='none'?'fixed':stat.suggestion);
+  const c = { type, basis:'ton', varValue:0, threshold:5000, stepCost:0, minSteps:1, fixedValue:Math.round(stat.meanCost||0) };
+  if(stat.suggestion==='variable'){ c.basis='ton'; c.varValue = Math.max(0, Math.round(stat.rgTons.slope*100)/100); }
+  if(stat.suggestion==='variable-rev'){ c.basis='revenue'; c.varValue = Math.round(stat.rgRev.slope*10000)/100; }
+  if(stat.suggestion==='step' && stat.stepGuess){ c.threshold=stat.stepGuess.threshold; c.stepCost=stat.stepGuess.stepCost; }
+  dataState.classification[ci.id]=c;
+  return c;
+}
+
+function renderClassification(){
+  const grid = document.getElementById('classGrid');
+  const th = theme();
+  let html='';
+  dataState.costItems.forEach(ci=>{
+    const stat = classify(ci);
+    const c = ensureClassDefault(ci, stat);
+    const badgeClass = c.type==='variable'?'b-var':c.type==='step'?'b-step':'b-fixed';
+    const badgeColor = c.type==='variable'?th.divPos:c.type==='step'?getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim():th.inkMuted;
+    const spark = stat.rows ? sparkSvg(stat.rows.map(r=>({x:r.tons,y:r.cost})), badgeColor) : '';
+    const statsLine = stat.n<2
+      ? (stat.note||'')
+      : 'r(тонны)='+ (isFinite(stat.cTons)?stat.cTons.toFixed(2):'—') +'  r(выручка)='+(isFinite(stat.cRev)?stat.cRev.toFixed(2):'—')+'  CV='+ (stat.cv||0).toFixed(2)+'  n='+stat.n;
+
+    html += '<div class="class-item" data-item="'+ci.id+'">';
+    html += '<div class="name">'+ci.name+'</div>';
+    html += '<span class="badge '+badgeClass+'">'+(c.type==='variable'?'Переменные':c.type==='step'?'Ступенчатые':'Постоянные')+'</span>';
+    html += spark;
+    html += '<div class="stats">'+statsLine+'</div>';
+    html += '<select data-classify="'+ci.id+'">'
+      + '<option value="variable"'+(c.type==='variable'?' selected':'')+'>Переменные</option>'
+      + '<option value="step"'+(c.type==='step'?' selected':'')+'>Ступенчатые</option>'
+      + '<option value="fixed"'+(c.type==='fixed'?' selected':'')+'>Постоянные</option>'
+      + '</select>';
+    html += '<div class="params">';
+    if(c.type==='variable'){
+      html += '<div class="row radios">'
+        + '<label><input type="radio" name="basis-'+ci.id+'" value="ton" '+(c.basis==='ton'?'checked':'')+' data-basis="'+ci.id+'"> ₽/тонну</label>'
+        + '<label><input type="radio" name="basis-'+ci.id+'" value="revenue" '+(c.basis==='revenue'?'checked':'')+' data-basis="'+ci.id+'"> % от выручки</label>'
+        + '</div>';
+      html += '<div class="row">Значение <input type="number" step="0.01" data-varvalue="'+ci.id+'" value="'+c.varValue+'"> '+(c.basis==='ton'?'₽/т':'%')+'</div>';
+    } else if(c.type==='step'){
+      html += '<div class="row">Порог <input type="number" step="100" data-threshold="'+ci.id+'" value="'+c.threshold+'"> т/ступень</div>';
+      html += '<div class="row">Стоимость ступени <input type="number" step="1000" data-stepcost="'+ci.id+'" value="'+c.stepCost+'"> ₽</div>';
+      html += '<div class="row">Мин. ступеней <input type="number" step="1" min="0" data-minsteps="'+ci.id+'" value="'+c.minSteps+'"></div>';
+      if(!stat.stepGuess && stat.n>=2) html += '<div class="note">Явного скачка в данных не видно — порог задан ориентировочно, уточните вручную.</div>';
+    } else {
+      html += '<div class="row">Значение <input type="number" step="1000" data-fixedvalue="'+ci.id+'" value="'+c.fixedValue+'"> ₽/период</div>';
+    }
+    html += '</div>';
+    if(stat.note && stat.n>=2) html += '<div class="note warn">'+stat.note+'</div>';
+    html += '</div>';
+  });
+  grid.innerHTML = html;
+}
+
+function refreshDataTab(){
+  renderMonthTable();
+  renderClassification();
+}
+
+document.getElementById('fleetTons').addEventListener('input', e=>{
+  dataState.fleetTons = Number(e.target.value)||0;
+  renderMonthTable();
+});
+
+document.getElementById('monthTable').addEventListener('input', e=>{
+  const t=e.target;
+  if(t.matches('input.monthlabel[data-month]')){
+    const m=dataState.months.find(x=>x.id===t.dataset.month); if(m) m.label=t.value; return;
+  }
+  if(t.matches('input.monthlabel[data-costname]')){
+    const ci=dataState.costItems.find(x=>x.id===t.dataset.costname); if(ci) ci.name=t.value; renderClassification(); return;
+  }
+  if(t.matches('input.cell[data-metric="revenue"]')){
+    const m=dataState.months.find(x=>x.id===t.dataset.month); if(m) m.revenue=Number(t.value)||0;
+  } else if(t.matches('input.cell[data-metric="tons"]')){
+    const m=dataState.months.find(x=>x.id===t.dataset.month); if(m) m.tons=Number(t.value)||0;
+    renderMonthTable();
+  } else if(t.matches('input.cell[data-cost]')){
+    setCell(t.dataset.cost, t.dataset.month, Number(t.value)||0);
+  }
+  renderClassification();
+});
+
+document.getElementById('monthTable').addEventListener('click', e=>{
+  const delMonth = e.target.dataset.delmonth;
+  const delCost = e.target.dataset.delcost;
+  if(delMonth){
+    dataState.months = dataState.months.filter(m=>m.id!==delMonth);
+    dataState.costItems.forEach(ci=>{ if(dataState.values[ci.id]) delete dataState.values[ci.id][delMonth]; });
+    refreshDataTab();
+  } else if(delCost){
+    dataState.costItems = dataState.costItems.filter(c=>c.id!==delCost);
+    delete dataState.values[delCost];
+    delete dataState.classification[delCost];
+    refreshDataTab();
+  }
+});
+
+document.getElementById('addMonthBtn').addEventListener('click', ()=>{
+  const label = defaultMonthLabels(1)[0];
+  dataState.months.push({id:uid(), label:'M'+(dataState.months.length+1), revenue:0, tons:0});
+  refreshDataTab();
+});
+document.getElementById('addCostRowBtn').addEventListener('click', ()=>{
+  const ci = {id:uid(), name:'Новая статья'};
+  dataState.costItems.push(ci);
+  dataState.values[ci.id]={};
+  refreshDataTab();
+});
+
+document.getElementById('classGrid').addEventListener('change', e=>{
+  const t=e.target;
+  const id = t.dataset.classify||t.dataset.basis||t.dataset.varvalue||t.dataset.threshold||t.dataset.stepcost||t.dataset.minsteps||t.dataset.fixedvalue;
+  if(!id) return;
+  const c = dataState.classification[id]; if(!c) return;
+  if(t.dataset.classify) c.type = t.value;
+  if(t.dataset.basis) c.basis = t.value;
+  if(t.dataset.varvalue) c.varValue = Number(t.value)||0;
+  if(t.dataset.threshold) c.threshold = Number(t.value)||1;
+  if(t.dataset.stepcost) c.stepCost = Number(t.value)||0;
+  if(t.dataset.minsteps) c.minSteps = Number(t.value)||0;
+  if(t.dataset.fixedvalue) c.fixedValue = Number(t.value)||0;
+  renderClassification();
+});
+
+/* =========================================================
+   TAB 2 — calculator
+   ========================================================= */
+const calcState = {
+  fleetTons: 8000, rate: 70, utilization: 50, days: 30,
+  varItems: [
+    {id:uid(), name:'Маркетинг', basis:'revenue', value:3},
+    {id:uid(), name:'Выплаты отделу аренды', basis:'revenue', value:8},
+    {id:uid(), name:'Налоги (НДС)', basis:'revenue', value:20},
+    {id:uid(), name:'Ремонт', basis:'ton', value:180},
+    {id:uid(), name:'ФОТ СБ', basis:'ton', value:45},
+    {id:uid(), name:'Потери', basis:'ton', value:25}
+  ],
+  stepItems: [
+    {id:uid(), name:'Аренда и обслуживание склада', threshold:5000, cost:800000, minSteps:1},
+    {id:uid(), name:'ФОТ складского персонала', threshold:5000, cost:350000, minSteps:1},
+    {id:uid(), name:'ФОТ проектировщика', threshold:10000, cost:180000, minSteps:0}
+  ],
+  fixedItems: [
+    {id:uid(), name:'Постоянные издержки (админ, офис и пр.)', value:1200000}
+  ]
+};
+
+function stepCostsAt(utilizedTons){
+  let total=0; const breakdown=[];
+  calcState.stepItems.forEach(it=>{
+    const raw = it.threshold>0 ? Math.ceil(utilizedTons/it.threshold) : 0;
+    const steps = Math.max(it.minSteps||0, raw);
+    const cost = steps*it.cost;
+    total+=cost; breakdown.push({name:it.name, steps, cost});
+  });
+  return {total, breakdown};
+}
+function varPctSum(){ return calcState.varItems.filter(i=>i.basis==='revenue').reduce((s,i)=>s+Number(i.value||0),0); }
+function varTonSum(){ return calcState.varItems.filter(i=>i.basis==='ton').reduce((s,i)=>s+Number(i.value||0),0); }
+function fixedSum(){ return calcState.fixedItems.reduce((s,i)=>s+Number(i.value||0),0); }
+
+function computeAt(utilPct, rate){
+  const utilizedTons = calcState.fleetTons*utilPct/100;
+  const revenue = rate*utilizedTons*calcState.days;
+  const pct = varPctSum()/100;
+  const variableCosts = revenue*pct + utilizedTons*varTonSum();
+  const {total:stepTotal, breakdown:stepBreakdown} = stepCostsAt(utilizedTons);
+  const fixed = fixedSum();
+  const totalCosts = variableCosts+stepTotal+fixed;
+  const profit = revenue-totalCosts;
+  return {utilizedTons, revenue, variableCosts, stepTotal, stepBreakdown, fixed, totalCosts, profit,
+          marginPerTon: utilizedTons>0?profit/utilizedTons:0};
+}
+function breakevenRateForUtil(utilPct){
+  const utilizedTons = calcState.fleetTons*utilPct/100;
+  if(utilizedTons<=0) return {value:null, reason:'zero'};
+  const pct = varPctSum()/100;
+  const coeff = utilizedTons*calcState.days*(1-pct);
+  if(coeff<=0) return {value:null, reason:'impossible'};
+  const {total:stepTotal} = stepCostsAt(utilizedTons);
+  const fixedPart = utilizedTons*varTonSum() + stepTotal + fixedSum();
+  return {value: fixedPart/coeff, reason:'ok'};
+}
+function scanUtilization(rate, steps){
+  steps = steps||400;
+  const pts=[];
+  for(let i=0;i<=steps;i++){
+    const u=i*100/steps;
+    pts.push({u, profit: computeAt(u,rate).profit});
+  }
+  const crossings=[];
+  for(let i=1;i<pts.length;i++){
+    const a=pts[i-1], b=pts[i];
+    if((a.profit<0&&b.profit>=0)||(a.profit>=0&&b.profit<0)){
+      const t = a.profit===b.profit?0:(-a.profit)/(b.profit-a.profit);
+      crossings.push({u:a.u+(b.u-a.u)*t, dir:b.profit>=a.profit?'up':'down'});
+    }
+  }
+  return {pts, crossings};
+}
+
+/* ---- render dynamic rows (sidebar) ---- */
+function renderVarRows(){
+  const el = document.getElementById('varRows');
+  el.innerHTML = calcState.varItems.map(it=>
+    '<div class="dyn-row" data-row="'+it.id+'">'
+    +'<input type="text" data-v-name="'+it.id+'" value="'+it.name+'">'
+    +'<div class="basis-toggle"><button type="button" data-v-basis="'+it.id+'" data-val="ton" class="'+(it.basis==='ton'?'on':'')+'">₽/т</button>'
+    +'<button type="button" data-v-basis="'+it.id+'" data-val="revenue" class="'+(it.basis==='revenue'?'on':'')+'">%выр</button></div>'
+    +'<input type="number" step="0.01" data-v-value="'+it.id+'" value="'+it.value+'">'
+    +'<button class="rowdel" data-v-del="'+it.id+'">×</button>'
+    +'</div>').join('');
+}
+function renderStepRows(){
+  const el = document.getElementById('stepRows');
+  el.innerHTML = calcState.stepItems.map(it=>
+    '<div class="dyn-row" data-row="'+it.id+'">'
+    +'<input type="text" data-s-name="'+it.id+'" value="'+it.name+'" style="flex-basis:100%;">'
+    +'<input type="number" step="100" data-s-threshold="'+it.id+'" value="'+it.threshold+'" title="порог, т">'
+    +'<input type="number" step="1000" data-s-cost="'+it.id+'" value="'+it.cost+'" title="₽ за ступень">'
+    +'<input type="number" step="1" min="0" data-s-min="'+it.id+'" value="'+it.minSteps+'" title="мин. ступеней" style="width:56px;">'
+    +'<button class="rowdel" data-s-del="'+it.id+'">×</button>'
+    +'</div>').join('');
+}
+function renderFixedRows(){
+  const el = document.getElementById('fixedRows');
+  el.innerHTML = calcState.fixedItems.map(it=>
+    '<div class="dyn-row" data-row="'+it.id+'">'
+    +'<input type="text" data-f-name="'+it.id+'" value="'+it.name+'">'
+    +'<input type="number" step="1000" data-f-value="'+it.id+'" value="'+it.value+'">'
+    +'<button class="rowdel" data-f-del="'+it.id+'">×</button>'
+    +'</div>').join('');
+}
+
+document.getElementById('varRows').addEventListener('input', e=>{
+  const t=e.target;
+  const it = calcState.varItems.find(i=>i.id===(t.dataset.vName||t.dataset.vValue));
+  if(!it) return;
+  if(t.dataset.vName) it.name=t.value;
+  if(t.dataset.vValue) it.value=Number(t.value)||0;
+  renderAll();
+});
+document.getElementById('varRows').addEventListener('click', e=>{
+  if(e.target.dataset.vBasis){
+    const it=calcState.varItems.find(i=>i.id===e.target.dataset.vBasis);
+    if(it){ it.basis=e.target.dataset.val; renderVarRows(); renderAll(); }
+  } else if(e.target.dataset.vDel){
+    calcState.varItems = calcState.varItems.filter(i=>i.id!==e.target.dataset.vDel);
+    renderVarRows(); renderAll();
+  }
+});
+document.getElementById('addVarBtn').addEventListener('click', ()=>{
+  calcState.varItems.push({id:uid(), name:'Новая статья', basis:'ton', value:0});
+  renderVarRows(); renderAll();
+});
+
+document.getElementById('stepRows').addEventListener('input', e=>{
+  const t=e.target;
+  const id = t.dataset.sName||t.dataset.sThreshold||t.dataset.sCost||t.dataset.sMin;
+  const it = calcState.stepItems.find(i=>i.id===id); if(!it) return;
+  if(t.dataset.sName) it.name=t.value;
+  if(t.dataset.sThreshold) it.threshold=Number(t.value)||1;
+  if(t.dataset.sCost) it.cost=Number(t.value)||0;
+  if(t.dataset.sMin) it.minSteps=Number(t.value)||0;
+  renderAll();
+});
+document.getElementById('stepRows').addEventListener('click', e=>{
+  if(e.target.dataset.sDel){
+    calcState.stepItems = calcState.stepItems.filter(i=>i.id!==e.target.dataset.sDel);
+    renderStepRows(); renderAll();
+  }
+});
+document.getElementById('addStepBtn').addEventListener('click', ()=>{
+  calcState.stepItems.push({id:uid(), name:'Новая ступень', threshold:5000, cost:100000, minSteps:0});
+  renderStepRows(); renderAll();
+});
+
+document.getElementById('fixedRows').addEventListener('input', e=>{
+  const t=e.target;
+  const id=t.dataset.fName||t.dataset.fValue;
+  const it=calcState.fixedItems.find(i=>i.id===id); if(!it) return;
+  if(t.dataset.fName) it.name=t.value;
+  if(t.dataset.fValue) it.value=Number(t.value)||0;
+  renderAll();
+});
+document.getElementById('fixedRows').addEventListener('click', e=>{
+  if(e.target.dataset.fDel){
+    calcState.fixedItems = calcState.fixedItems.filter(i=>i.id!==e.target.dataset.fDel);
+    renderFixedRows(); renderAll();
+  }
+});
+document.getElementById('addFixedBtn').addEventListener('click', ()=>{
+  calcState.fixedItems.push({id:uid(), name:'Новая статья', value:0});
+  renderFixedRows(); renderAll();
+});
+
+/* ---- top-level sliders ---- */
+function linkPair(rangeEl, numberEl, onChange){
+  rangeEl.addEventListener('input', ()=>{ numberEl.value=rangeEl.value; onChange(); });
+  numberEl.addEventListener('input', ()=>{
+    const v=Number(numberEl.value)||0;
+    if(rangeEl) rangeEl.value = Math.max(Number(rangeEl.min), Math.min(Number(rangeEl.max), v));
+    onChange();
+  });
+}
+const elFleet = document.getElementById('c-fleet');
+const elRate = document.getElementById('c-rate'), elRateRange = document.getElementById('c-rate-range');
+const elUtil = document.getElementById('c-util'), elUtilRange = document.getElementById('c-util-range');
+const elDays = document.getElementById('c-days');
+
+elFleet.addEventListener('input', ()=>{ calcState.fleetTons=Number(elFleet.value)||0; renderAll(); });
+elDays.addEventListener('input', ()=>{ calcState.days=Number(elDays.value)||1; renderAll(); });
+linkPair(elRateRange, elRate, ()=>{ calcState.rate=Number(elRate.value)||0; renderAll(); });
+linkPair(elUtilRange, elUtil, ()=>{ calcState.utilization=Number(elUtil.value)||0; renderAll(); });
+
+/* ---- KPIs ---- */
+function renderKPIs(){
+  const r = computeAt(calcState.utilization, calcState.rate);
+  document.getElementById('v-fleet').textContent = nf0.format(calcState.fleetTons);
+  document.getElementById('v-rate').textContent = nf0.format(calcState.rate);
+  document.getElementById('v-util').textContent = nf1.format(calcState.utilization)+'%';
+
+  document.getElementById('k-revenue').textContent = fmtRub(r.revenue);
+  document.getElementById('k-var').textContent = fmtRub(r.variableCosts);
+  document.getElementById('k-step').textContent = fmtRub(r.stepTotal);
+  document.getElementById('k-fixed').textContent = fmtRub(r.fixed);
+  document.getElementById('k-total').textContent = fmtRub(r.totalCosts);
+  document.getElementById('k-profit').textContent = fmtRub(r.profit);
+  document.getElementById('k-pill').innerHTML = '<span class="pill '+(r.profit>=0?'good':'bad')+'">'+(r.profit>=0?'Прибыльно':'Убыточно')+'</span>';
+
+  const scan = scanUtilization(calcState.rate);
+  const beEl = document.getElementById('k-be-util');
+  if(scan.crossings.length===0){
+    beEl.textContent = r.profit>=0 ? '< 0%' : 'не достигается';
+    beEl.title = r.profit>=0 ? 'Прибыльно уже при нулевой загрузке (проверьте постоянные издержки)' : 'В диапазоне 0–100% прибыль не достигается при текущей цене';
+  } else {
+    beEl.textContent = nf1.format(scan.crossings[0].u)+'%';
+  }
+
+  const be = breakevenRateForUtil(calcState.utilization);
+  const beRateEl = document.getElementById('k-be-rate');
+  if(be.reason==='zero'){ beRateEl.textContent='—'; beRateEl.title='Загрузка равна нулю — нет объёма для расчёта'; }
+  else if(be.reason==='impossible'){ beRateEl.textContent='недостижимо'; beRateEl.title='Сумма процентных ставок (% от выручки) ≥ 100%'; }
+  else { beRateEl.textContent = fmtRub(be.value)+'/т/сут'; }
+
+  document.getElementById('varTotal').textContent = fmtRub(r.revenue*varPctSum()/100 + r.utilizedTons*varTonSum());
+  document.getElementById('stepTotal').textContent = fmtRub(r.stepTotal);
+  document.getElementById('fixedTotal').textContent = fmtRub(r.fixed);
+
+  const pctSum = varPctSum();
+  let warn = document.getElementById('pctWarn');
+  const varCard = document.getElementById('varRows').parentElement;
+  if(pctSum>=90){
+    if(!warn && varCard){
+      warn=document.createElement('div'); warn.id='pctWarn'; warn.className='warnbox';
+      varCard.appendChild(warn);
+    }
+    if(warn) warn.textContent = pctSum>=100
+      ? 'Сумма ставок «% от выручки» = '+nf1.format(pctSum)+'% — прибыль невозможна ни при какой цене.'
+      : 'Сумма ставок «% от выручки» = '+nf1.format(pctSum)+'% — запас для покрытия остальных затрат очень мал.';
+  } else if(warn){ warn.remove(); }
+}
+
+/* ---- line chart ---- */
+function renderLineChart(){
+  const svg = document.getElementById('lineChart');
+  const th = theme();
+  const W=960,H=320, mL=64,mR=20,mT=16,mB=34;
+  const plotW=W-mL-mR, plotH=H-mT-mB;
+  const scan = scanUtilization(calcState.rate, 300);
+  const profits = scan.pts.map(p=>p.profit);
+  let minP=Math.min(0,...profits), maxP=Math.max(0,...profits);
+  if(minP===maxP){ minP-=1; maxP+=1; }
+  const padP = (maxP-minP)*0.08;
+  minP -= padP; maxP += padP;
+
+  const x = u => mL + (u/100)*plotW;
+  const y = p => mT + (1-(p-minP)/(maxP-minP))*plotH;
+  const yZero = y(0);
+
+  let d='M'; scan.pts.forEach((p,i)=>{ d += (i===0?'':'L')+x(p.u).toFixed(1)+','+y(p.profit).toFixed(1)+' '; });
+  let areaD = 'M'+x(0).toFixed(1)+','+yZero.toFixed(1)+' ';
+  scan.pts.forEach(p=>{ areaD += 'L'+x(p.u).toFixed(1)+','+y(p.profit).toFixed(1)+' '; });
+  areaD += 'L'+x(100).toFixed(1)+','+yZero.toFixed(1)+' Z';
+
+  const gradFrac = Math.max(0,Math.min(1,(yZero-mT)/plotH));
+
+  let svgc='';
+  svgc += '<defs><linearGradient id="profGrad" x1="0" y1="0" x2="0" y2="1">'
+    + '<stop offset="0" stop-color="'+th.divPos+'" stop-opacity="0.55"/>'
+    + '<stop offset="'+gradFrac.toFixed(4)+'" stop-color="'+th.divPos+'" stop-opacity="0.55"/>'
+    + '<stop offset="'+gradFrac.toFixed(4)+'" stop-color="'+th.divNeg+'" stop-opacity="0.55"/>'
+    + '<stop offset="1" stop-color="'+th.divNeg+'" stop-opacity="0.55"/>'
+    + '</linearGradient></defs>';
+
+  // gridlines
+  [0,25,50,75,100].forEach(u=>{
+    svgc += '<line x1="'+x(u)+'" y1="'+mT+'" x2="'+x(u)+'" y2="'+(mT+plotH)+'" stroke="'+th.gridline+'" stroke-width="1"/>';
+    svgc += '<text x="'+x(u)+'" y="'+(mT+plotH+18)+'" fill="'+th.inkMuted+'" font-size="11" text-anchor="middle" font-family="var(--font-mono)">'+u+'%</text>';
+  });
+  [minP,0,maxP].forEach(v=>{
+    const yy=y(v);
+    svgc += '<line x1="'+mL+'" y1="'+yy+'" x2="'+(mL+plotW)+'" y2="'+yy+'" stroke="'+(v===0?th.baseline:th.gridline)+'" stroke-width="'+(v===0?1.4:1)+'"/>';
+    svgc += '<text x="'+(mL-8)+'" y="'+(yy+4)+'" fill="'+th.inkMuted+'" font-size="10.5" text-anchor="end">'+fmtCompact(v)+'</text>';
+  });
+
+  // step thresholds
+  calcState.stepItems.forEach(it=>{
+    const u = calcState.fleetTons>0 ? it.threshold/calcState.fleetTons*100 : null;
+    if(u!==null && u>0 && u<=100){
+      svgc += '<line x1="'+x(u)+'" y1="'+mT+'" x2="'+x(u)+'" y2="'+(mT+plotH)+'" stroke="'+th.accent+'" stroke-width="1" stroke-dasharray="3,3" opacity="0.55"/>';
+    }
+  });
+
+  svgc += '<path d="'+areaD+'" fill="url(#profGrad)" stroke="none"/>';
+  svgc += '<path d="'+d+'" fill="none" stroke="'+th.ink2+'" stroke-width="2"/>';
+
+  // crossings
+  scan.crossings.forEach(c=>{
+    svgc += '<circle cx="'+x(c.u)+'" cy="'+yZero+'" r="4" fill="'+(c.dir==='up'?th.good:th.critical)+'" stroke="'+th.ink+'" stroke-width="1"/>';
+  });
+
+  // current point
+  const cur = computeAt(calcState.utilization, calcState.rate);
+  svgc += '<line x1="'+x(calcState.utilization)+'" y1="'+mT+'" x2="'+x(calcState.utilization)+'" y2="'+(mT+plotH)+'" stroke="'+th.accent+'" stroke-width="1.4"/>';
+  svgc += '<circle cx="'+x(calcState.utilization)+'" cy="'+y(cur.profit)+'" r="5" fill="'+th.accent+'" stroke="'+th.ink+'" stroke-width="1.5"/>';
+
+  svgc += '<rect id="hoverCapture" x="'+mL+'" y="'+mT+'" width="'+plotW+'" height="'+plotH+'" fill="transparent"/>';
+
+  svg.innerHTML = svgc;
+
+  const chipsEl = document.getElementById('crossChips');
+  chipsEl.innerHTML = scan.crossings.length
+    ? scan.crossings.slice(0,6).map(c=>'<span class="chip '+(c.dir==='up'?'up':'down')+'">'+nf1.format(c.u)+'% '+(c.dir==='up'?'↑ в прибыль':'↓ в убыток')+'</span>').join('')
+    : '<span class="chip '+(cur.profit>=0?'up':'down')+'">'+(cur.profit>=0?'Прибыльно во всём диапазоне 0–100%':'Убыточно во всём диапазоне 0–100% при текущей цене')+'</span>';
+
+  const capture = svg.querySelector('#hoverCapture');
+  const tooltip = document.getElementById('tooltip');
+  capture.addEventListener('mousemove', ev=>{
+    const rect = svg.getBoundingClientRect();
+    const scaleX = W/rect.width;
+    const localX = (ev.clientX-rect.left)*scaleX;
+    let u = ((localX-mL)/plotW)*100;
+    u = Math.max(0,Math.min(100,u));
+    const pt = computeAt(u, calcState.rate);
+    tooltip.innerHTML = 'Загрузка: <b>'+nf1.format(u)+'%</b><br>Выручка: <b>'+fmtCompact(pt.revenue)+'</b><br>Затраты: <b>'+fmtCompact(pt.totalCosts)+'</b><br>Прибыль: <b style="color:'+(pt.profit>=0?theme().good:theme().critical)+'">'+fmtCompact(pt.profit)+'</b>';
+    tooltip.style.left = ev.clientX+'px';
+    tooltip.style.top = ev.clientY+'px';
+    tooltip.classList.add('show');
+  });
+  capture.addEventListener('mouseleave', ()=> tooltip.classList.remove('show'));
+}
+
+/* ---- heatmap ---- */
+function renderHeatmap(){
+  const th = theme();
+  const table = document.getElementById('heatTable');
+  const rate = calcState.rate||1;
+  const priceMin = rate*0.6, priceMax = rate*1.4;
+  const cols = 7;
+  const prices = Array.from({length:cols},(_,i)=> priceMin + (priceMax-priceMin)*i/(cols-1));
+  const utils = Array.from({length:21},(_,i)=> i*5);
+
+  // find global max abs profit for color scale
+  let maxAbs=1;
+  const grid = utils.map(u=> prices.map(p=> computeAt(u,p).profit));
+  grid.forEach(row=> row.forEach(v=>{ maxAbs=Math.max(maxAbs, Math.abs(v)); }));
+
+  const closestPriceIdx = prices.reduce((best,p,i)=> Math.abs(p-calcState.rate)<Math.abs(prices[best]-calcState.rate)?i:best, 0);
+  const closestUtilIdx = utils.reduce((best,u,i)=> Math.abs(u-calcState.utilization)<Math.abs(utils[best]-calcState.utilization)?i:best, 0);
+
+  let h='<thead><tr><th class="corner"></th><th>Тонн</th><th>Цена безуб.<br>₽/т/сут</th>';
+  prices.forEach((p,i)=> h+='<th'+(i===closestPriceIdx?' style="color:var(--accent)"':'')+'>'+nf0.format(Math.round(p))+'</th>');
+  h+='</tr></thead><tbody>';
+
+  utils.forEach((u,ri)=>{
+    const tons = calcState.fleetTons*u/100;
+    const be = breakevenRateForUtil(u);
+    const beText = be.reason==='ok' ? nf0.format(Math.round(be.value)) : (be.reason==='zero'?'—':'н/д');
+    h += '<tr'+(ri===closestUtilIdx?' class="current"':'')+'>';
+    h += '<td class="info">'+nf0.format(u)+'%</td><td class="info">'+fmtTons(tons)+'</td><td class="be">'+beText+'</td>';
+    prices.forEach((p,ci)=>{
+      const profit = grid[ri][ci];
+      const bg = divergingColor(profit,maxAbs,th);
+      const fg = textColorFor(bg);
+      const isCur = ri===closestUtilIdx && ci===closestPriceIdx;
+      h += '<td style="background:'+bg+';color:'+fg+';'+(isCur?'box-shadow:inset 0 0 0 2px '+th.ink+';':'')+'" '
+         + 'data-tip-u="'+u+'" data-tip-p="'+p.toFixed(1)+'" data-tip-profit="'+profit.toFixed(0)+'">'+fmtCompact(profit).replace(' ₽','')+'</td>';
+    });
+    h += '</tr>';
+  });
+  h += '</tbody>';
+  table.innerHTML = h;
+
+  const tooltip = document.getElementById('tooltip');
+  table.querySelectorAll('td[data-tip-u]').forEach(td=>{
+    td.addEventListener('mousemove', ev=>{
+      const u=td.dataset.tipU, p=Number(td.dataset.tipP), profit=Number(td.dataset.tipProfit);
+      tooltip.innerHTML = 'Загрузка <b>'+u+'%</b>, цена <b>'+nf0.format(Math.round(p))+' ₽/т/сут</b><br>Прибыль: <b style="color:'+(profit>=0?theme().good:theme().critical)+'">'+fmtRub(profit)+'</b>';
+      tooltip.style.left=ev.clientX+'px'; tooltip.style.top=ev.clientY+'px'; tooltip.classList.add('show');
+    });
+    td.addEventListener('mouseleave', ()=>tooltip.classList.remove('show'));
+  });
+}
+
+function renderAll(){
+  renderKPIs();
+  renderLineChart();
+  renderHeatmap();
+}
+
+/* ---- initial render of calc sidebar ---- */
+renderVarRows(); renderStepRows(); renderFixedRows();
+
+/* =========================================================
+   Tabs
+   ========================================================= */
+const tabbtnData = document.getElementById('tabbtn-data'), tabbtnCalc = document.getElementById('tabbtn-calc');
+const panelData = document.getElementById('panel-data'), panelCalc = document.getElementById('panel-calc');
+function showTab(name){
+  const isData = name==='data';
+  panelData.classList.toggle('active', isData);
+  panelCalc.classList.toggle('active', !isData);
+  tabbtnData.setAttribute('aria-selected', isData);
+  tabbtnCalc.setAttribute('aria-selected', !isData);
+  if(!isData) renderAll();
+}
+tabbtnData.addEventListener('click', ()=>showTab('data'));
+tabbtnCalc.addEventListener('click', ()=>showTab('calc'));
+
+/* ---- transfer button ---- */
+document.getElementById('transferBtn').addEventListener('click', ()=>{
+  const newVar=[], newStep=[], newFixed=[];
+  dataState.costItems.forEach(ci=>{
+    const c = dataState.classification[ci.id];
+    if(!c) return;
+    if(c.type==='variable') newVar.push({id:uid(), name:ci.name, basis:c.basis, value:c.varValue});
+    else if(c.type==='step') newStep.push({id:uid(), name:ci.name, threshold:c.threshold, cost:c.stepCost, minSteps:c.minSteps});
+    else newFixed.push({id:uid(), name:ci.name, value:c.fixedValue});
+  });
+  calcState.varItems = newVar.length?newVar:calcState.varItems;
+  calcState.stepItems = newStep.length?newStep:calcState.stepItems;
+  calcState.fixedItems = newFixed.length?newFixed:calcState.fixedItems;
+  calcState.fleetTons = dataState.fleetTons || calcState.fleetTons;
+
+  const validMonths = dataState.months.filter(m=>m.tons>0 && m.revenue>0);
+  if(validMonths.length){
+    const rates = validMonths.map(m=> m.revenue/(m.tons*30));
+    calcState.rate = Math.round(mean(rates));
+    const avgTons = mean(validMonths.map(m=>m.tons));
+    calcState.utilization = calcState.fleetTons>0 ? Math.min(100, Math.round(avgTons/calcState.fleetTons*1000)/10) : calcState.utilization;
+  }
+
+  elFleet.value = calcState.fleetTons;
+  elRate.value = calcState.rate; elRateRange.value = Math.min(elRateRange.max, calcState.rate);
+  elUtil.value = calcState.utilization; elUtilRange.value = calcState.utilization;
+
+  renderVarRows(); renderStepRows(); renderFixedRows();
+  document.getElementById('transferMsg').textContent = 'Перенесено: '+newVar.length+' перем., '+newStep.length+' ступ., '+newFixed.length+' пост. Открываю калькулятор…';
+  showTab('calc');
+});
+
+/* ---- theme change redraw ---- */
+const mq = window.matchMedia('(prefers-color-scheme: dark)');
+mq.addEventListener('change', ()=>{ if(panelCalc.classList.contains('active')) renderAll(); });
+new MutationObserver(()=>{ if(panelCalc.classList.contains('active')) renderAll(); })
+  .observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+
+refreshDataTab();
+renderAll();
+})();
+</script>
