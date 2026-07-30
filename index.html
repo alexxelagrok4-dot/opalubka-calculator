@@ -1233,8 +1233,14 @@ function applyAppState(saved){
 }
 
 const LOGIN_DOMAIN = '@opalubka.invalid'; // синтетический адрес — реальная почта не нужна и не используется
+const LOGIN_PATTERN = /^[a-z0-9_.-]{3,}$/i;
 function loginToEmail(login){ return login.trim().toLowerCase().replace(/[^a-z0-9_.-]/g,'') + LOGIN_DOMAIN; }
 function emailToLogin(email){ return (email||'').split('@')[0]; }
+function validateLogin(login){
+  if(!login) return 'Введите логин.';
+  if(!LOGIN_PATTERN.test(login)) return 'Логин — только латинские буквы, цифры, «.», «-», «_», не короче 3 символов (кириллица и пробелы не подойдут).';
+  return null;
+}
 
 if(!SUPABASE_CONFIGURED){
   authNote.textContent = 'Вход ещё не настроен администратором — сохранение сценариев пока недоступно.';
@@ -1243,14 +1249,16 @@ if(!SUPABASE_CONFIGURED){
   signInBtn.addEventListener('click', async ()=>{
     authError.textContent=''; authNote.textContent='';
     const login = authEmail.value.trim();
-    if(!login){ authError.textContent='Введите логин.'; return; }
+    const loginErr = validateLogin(login);
+    if(loginErr){ authError.textContent = loginErr; return; }
     const { error } = await sb.auth.signInWithPassword({ email: loginToEmail(login), password: authPassword.value });
-    if(error) authError.textContent = /Invalid login/i.test(error.message) ? 'Неверный логин или пароль.' : error.message;
+    if(error) authError.textContent = /invalid login/i.test(error.message) ? 'Неверный логин или пароль.' : error.message;
   });
   signUpBtn.addEventListener('click', async ()=>{
     authError.textContent=''; authNote.textContent='';
     const login = authEmail.value.trim();
-    if(login.length<3){ authError.textContent='Логин должен быть не короче 3 символов (латиница/цифры).'; return; }
+    const loginErr = validateLogin(login);
+    if(loginErr){ authError.textContent = loginErr; return; }
     if(authPassword.value.length<6){ authError.textContent='Пароль должен быть не короче 6 символов.'; return; }
     const { error } = await sb.auth.signUp({ email: loginToEmail(login), password: authPassword.value });
     if(error) authError.textContent = /already registered/i.test(error.message) ? 'Такой логин уже занят — выберите другой.' : error.message;
