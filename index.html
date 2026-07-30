@@ -187,10 +187,44 @@ table.heat td.current-col{outline:2px solid var(--accent);outline-offset:-2px;}
 .legend .bar{height:8px;flex:1;max-width:220px;border-radius:99px;background:linear-gradient(90deg,var(--div-neg),var(--div-mid),var(--div-pos));}
 
 .warnbox{background:color-mix(in srgb, var(--critical) 10%, var(--surface));border:1px solid color-mix(in srgb, var(--critical) 35%, var(--border));color:var(--critical);border-radius:var(--radius-sm);padding:8px 11px;font-size:12px;margin-top:8px;}
+
+.auth-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:100;padding:20px;}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;width:100%;max-width:360px;display:flex;flex-direction:column;gap:10px;box-shadow:0 8px 30px rgba(0,0,0,0.12);}
+.auth-card h1{font-size:19px;font-weight:700;}
+.auth-card p{color:var(--ink-2);font-size:12.5px;margin:0 0 4px;}
+.auth-card input{font:inherit;font-size:13.5px;padding:9px 10px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);background:var(--bg);color:var(--ink);width:100%;}
+.auth-error{color:var(--critical);font-size:12px;min-height:16px;line-height:1.4;}
+.auth-note{color:var(--ink-muted);font-size:11.5px;min-height:14px;line-height:1.4;}
+.auth-actions{display:flex;gap:8px;margin-top:2px;}
+.auth-actions .btn{flex:1;}
+.userbar{display:flex;justify-content:flex-end;align-items:center;gap:10px;font-size:12.5px;color:var(--ink-2);margin-bottom:8px;}
+.userbar .email{font-family:var(--font-mono);}
+.scenario-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.scenario-row input[type=text]{flex:1 1 160px;}
+.scenario-row select{flex:1 1 200px;font:inherit;font-size:13px;padding:7px 8px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--bg);color:var(--ink);}
 </style>
 
-<div class="app">
+<div id="authScreen" class="auth-screen">
+  <div class="auth-card">
+    <h1>Экономика аренды опалубки</h1>
+    <p>Вход для сотрудников. Данные и сохранённые сценарии каждого пользователя видны только ему.</p>
+    <input type="email" id="authEmail" placeholder="Email" autocomplete="username">
+    <input type="password" id="authPassword" placeholder="Пароль" autocomplete="current-password">
+    <div class="auth-error" id="authError"></div>
+    <div class="auth-note" id="authNote"></div>
+    <div class="auth-actions">
+      <button class="btn primary" id="signInBtn">Войти</button>
+      <button class="btn" id="signUpBtn">Зарегистрироваться</button>
+    </div>
+  </div>
+</div>
+
+<div class="app" id="appRoot" style="display:none;">
   <header class="top">
+    <div class="userbar">
+      <span class="email" id="userEmail"></span>
+      <button class="btn" id="signOutBtn">Выйти</button>
+    </div>
     <h1>Экономика аренды опалубки</h1>
     <p>Вкладка 1 — фактические ежемесячные данные и их разнесение на переменные / ступенчатые / постоянные затраты. Вкладка 2 — калькулятор «что если»: меняете цену и загрузку, видите выручку, затраты, прибыль и точку безубыточности.</p>
   </header>
@@ -198,6 +232,18 @@ table.heat td.current-col{outline:2px solid var(--accent);outline-offset:-2px;}
   <div class="tabs" role="tablist">
     <button class="tab-btn" role="tab" id="tabbtn-data" aria-selected="true" aria-controls="panel-data">1. Данные и классификация</button>
     <button class="tab-btn" role="tab" id="tabbtn-calc" aria-selected="false" aria-controls="panel-calc">2. Калькулятор</button>
+  </div>
+
+  <div class="card" id="scenarioPanel">
+    <h2>Мои сценарии <span class="hint">сохраняются в вашем аккаунте, видны только вам</span></h2>
+    <div class="scenario-row">
+      <input type="text" id="scenarioName" placeholder="Название сценария">
+      <button class="btn primary" id="scenarioSaveBtn">Сохранить</button>
+      <select id="scenarioSelect"><option value="">— выберите сценарий —</option></select>
+      <button class="btn" id="scenarioLoadBtn">Загрузить</button>
+      <button class="btn" id="scenarioDeleteBtn">Удалить</button>
+    </div>
+    <div class="note" id="scenarioStatus"></div>
   </div>
 
   <section class="panel active" id="panel-data" role="tabpanel" aria-labelledby="tabbtn-data">
@@ -311,9 +357,19 @@ table.heat td.current-col{outline:2px solid var(--accent);outline-offset:-2px;}
 </div>
 <div id="tooltip"></div>
 
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script>
 (function(){
 "use strict";
+
+/* ---------- Supabase — auth + per-user scenario storage ----------
+   Заполняется после создания проекта на supabase.com (см. tools/README.md).
+   SUPABASE_ANON_KEY — публичный ключ, его можно хранить в клиентском коде:
+   доступ к данным всё равно ограничен политиками Row Level Security в базе. */
+const SUPABASE_URL = "__SUPABASE_URL__";
+const SUPABASE_ANON_KEY = "__SUPABASE_ANON_KEY__";
+const SUPABASE_CONFIGURED = SUPABASE_URL.indexOf('http')===0 && SUPABASE_ANON_KEY.length>20;
+const sb = SUPABASE_CONFIGURED ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
 /* ---------- theme-aware colors ---------- */
 function theme(){
@@ -1134,5 +1190,114 @@ new MutationObserver(()=>{ if(panelCalc.classList.contains('active')) renderAll(
 
 refreshDataTab();
 renderAll();
+
+/* =========================================================
+   Auth + per-user scenario storage (Supabase)
+   ========================================================= */
+const authScreen = document.getElementById('authScreen');
+const appRoot = document.getElementById('appRoot');
+const authEmail = document.getElementById('authEmail');
+const authPassword = document.getElementById('authPassword');
+const authError = document.getElementById('authError');
+const authNote = document.getElementById('authNote');
+const signInBtn = document.getElementById('signInBtn');
+const signUpBtn = document.getElementById('signUpBtn');
+const userEmailEl = document.getElementById('userEmail');
+
+function serializeAppState(){
+  return JSON.parse(JSON.stringify({dataState, calcState}));
+}
+function applyAppState(saved){
+  if(saved.dataState) Object.assign(dataState, saved.dataState);
+  if(saved.calcState) Object.assign(calcState, saved.calcState);
+  let maxN=0;
+  JSON.stringify(saved).replace(/"id(\d+)"/g, (m,n)=>{ maxN=Math.max(maxN, Number(n)); return m; });
+  uidc = Math.max(uidc, maxN+1);
+  refreshDataTab();
+  renderVarRows(); renderStepRows(); renderFixedRows();
+  elFleet.value = calcState.fleetTons;
+  elRate.value = calcState.rate; elRateRange.value = Math.min(Number(elRateRange.max), calcState.rate);
+  elUtil.value = calcState.utilization; elUtilRange.value = calcState.utilization;
+  elDays.value = calcState.days;
+  document.getElementById('fleetTons').value = dataState.fleetTons;
+  renderAll();
+}
+
+if(!SUPABASE_CONFIGURED){
+  authNote.textContent = 'Вход ещё не настроен администратором — сохранение сценариев пока недоступно.';
+  signInBtn.disabled = true; signUpBtn.disabled = true;
+} else {
+  signInBtn.addEventListener('click', async ()=>{
+    authError.textContent=''; authNote.textContent='';
+    const { error } = await sb.auth.signInWithPassword({ email: authEmail.value.trim(), password: authPassword.value });
+    if(error) authError.textContent = error.message;
+  });
+  signUpBtn.addEventListener('click', async ()=>{
+    authError.textContent=''; authNote.textContent='';
+    const { error } = await sb.auth.signUp({ email: authEmail.value.trim(), password: authPassword.value });
+    if(error) authError.textContent = error.message;
+    else authNote.textContent = 'Проверьте почту для подтверждения регистрации, затем войдите.';
+  });
+  document.getElementById('signOutBtn').addEventListener('click', ()=> sb.auth.signOut());
+
+  let currentScenarioId = null;
+
+  async function loadScenarioList(){
+    const sel = document.getElementById('scenarioSelect');
+    const { data, error } = await sb.from('scenarios').select('id,name,updated_at').order('updated_at',{ascending:false});
+    if(error){ sel.innerHTML = '<option value="">— ошибка загрузки —</option>'; return; }
+    sel.innerHTML = '<option value="">— выберите сценарий —</option>' + (data||[]).map(r=>
+      '<option value="'+r.id+'">'+r.name+' ('+new Date(r.updated_at).toLocaleDateString('ru-RU')+')</option>').join('');
+  }
+
+  document.getElementById('scenarioSaveBtn').addEventListener('click', async ()=>{
+    const statusEl = document.getElementById('scenarioStatus');
+    const name = document.getElementById('scenarioName').value.trim();
+    if(!name){ statusEl.textContent='Введите имя сценария.'; return; }
+    const { data:{ session } } = await sb.auth.getSession();
+    if(!session){ statusEl.textContent='Не авторизованы.'; return; }
+    const row = { user_id: session.user.id, name, payload: serializeAppState() };
+    if(currentScenarioId) row.id = currentScenarioId;
+    const { data, error } = await sb.from('scenarios').upsert(row).select().single();
+    if(error){ statusEl.textContent='Ошибка сохранения: '+error.message; return; }
+    currentScenarioId = data.id;
+    statusEl.textContent = 'Сохранено: '+name;
+    loadScenarioList();
+  });
+  document.getElementById('scenarioLoadBtn').addEventListener('click', async ()=>{
+    const statusEl = document.getElementById('scenarioStatus');
+    const id = document.getElementById('scenarioSelect').value;
+    if(!id){ statusEl.textContent='Выберите сценарий из списка.'; return; }
+    const { data, error } = await sb.from('scenarios').select('*').eq('id', id).single();
+    if(error){ statusEl.textContent='Ошибка загрузки: '+error.message; return; }
+    applyAppState(data.payload);
+    currentScenarioId = data.id;
+    document.getElementById('scenarioName').value = data.name;
+    statusEl.textContent = 'Загружено: '+data.name;
+  });
+  document.getElementById('scenarioDeleteBtn').addEventListener('click', async ()=>{
+    const statusEl = document.getElementById('scenarioStatus');
+    const id = document.getElementById('scenarioSelect').value;
+    if(!id){ statusEl.textContent='Выберите сценарий из списка.'; return; }
+    const { error } = await sb.from('scenarios').delete().eq('id', id);
+    if(error){ statusEl.textContent='Ошибка удаления: '+error.message; return; }
+    if(currentScenarioId===id) currentScenarioId=null;
+    statusEl.textContent='Удалено.';
+    loadScenarioList();
+  });
+
+  sb.auth.onAuthStateChange((event, session)=>{
+    if(session){
+      authScreen.style.display='none';
+      appRoot.style.display='block';
+      userEmailEl.textContent = session.user.email;
+      currentScenarioId = null;
+      loadScenarioList();
+    } else {
+      authScreen.style.display='flex';
+      appRoot.style.display='none';
+    }
+  });
+}
 })();
 </script>
