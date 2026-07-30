@@ -96,6 +96,12 @@ table.datatable input[type=text].monthlabel{width:88px;font-weight:600;}
 table.datatable input[type=number].cell{width:100px;}
 table.datatable tr.readonly td{color:var(--ink-muted);font-style:italic;}
 table.datatable tr.readonly input{color:var(--ink-muted);}
+table.datatable tr.pct-row td{font-size:11.5px;padding-top:2px;padding-bottom:6px;}
+table.datatable tr.pct-row td.rowlabel{padding-left:22px;font-weight:400;}
+table.datatable tr.total-row td{font-weight:700;border-top:2px solid var(--border-strong);}
+table.datatable tr.total-row td.rowlabel{background:var(--surface-3);}
+table.datatable tr.total-row.readonly td{font-weight:600;border-top:none;padding-top:2px;}
+table.datatable tr.total-row.readonly td.rowlabel{background:var(--surface-2);}
 .rowdel{background:none;border:none;color:var(--ink-muted);cursor:pointer;font-size:15px;padding:0 4px;line-height:1;}
 .rowdel:hover{color:var(--critical);}
 .addbar{display:flex;gap:8px;margin-top:12px;}
@@ -516,7 +522,7 @@ function renderMonthTable(){
   h += '<tr class="readonly"><td class="rowlabel">Коэфф. использования, %</td>';
   months.forEach(m=>{
     const pct = dataState.fleetTons>0 ? (m.tons/dataState.fleetTons*100) : 0;
-    h += '<td>'+nf1.format(pct)+'%</td>';
+    h += '<td data-util-month="'+m.id+'">'+nf1.format(pct)+'%</td>';
   });
   h += '</tr>';
 
@@ -528,10 +534,54 @@ function renderMonthTable(){
       h += '<td><input type="number" class="cell" data-cost="'+ci.id+'" data-month="'+m.id+'" value="'+(v===null?0:v)+'" step="1000"></td>';
     });
     h += '</tr>';
+    h += '<tr class="readonly pct-row"><td class="rowlabel">% от выручки</td>';
+    months.forEach(m=>{
+      const v = getCell(ci.id,m.id)||0;
+      const pct = m.revenue>0 ? nf1.format(v/m.revenue*100)+'%' : '—';
+      h += '<td data-pct-item="'+ci.id+'" data-pct-month="'+m.id+'">'+pct+'</td>';
+    });
+    h += '</tr>';
   });
+
+  h += '<tr class="total-row"><td class="rowlabel">Итого затрат, ₽</td>';
+  months.forEach(m=>{
+    const total = dataState.costItems.reduce((s,ci)=> s+(getCell(ci.id,m.id)||0), 0);
+    h += '<td data-total-month="'+m.id+'">'+nf0.format(Math.round(total))+'</td>';
+  });
+  h += '</tr>';
+
+  h += '<tr class="readonly total-row"><td class="rowlabel">Итого затрат, % от выручки</td>';
+  months.forEach(m=>{
+    const total = dataState.costItems.reduce((s,ci)=> s+(getCell(ci.id,m.id)||0), 0);
+    const pct = m.revenue>0 ? nf1.format(total/m.revenue*100)+'%' : '—';
+    h += '<td data-totalpct-month="'+m.id+'">'+pct+'</td>';
+  });
+  h += '</tr>';
 
   h += '</tbody>';
   el.innerHTML = h;
+}
+
+function refreshComputedCells(){
+  const months = dataState.months;
+  months.forEach(m=>{
+    const utilCell = document.querySelector('[data-util-month="'+m.id+'"]');
+    if(utilCell) utilCell.textContent = nf1.format(dataState.fleetTons>0 ? m.tons/dataState.fleetTons*100 : 0)+'%';
+    const total = dataState.costItems.reduce((s,ci)=> s+(getCell(ci.id,m.id)||0), 0);
+    const totalCell = document.querySelector('[data-total-month="'+m.id+'"]');
+    if(totalCell) totalCell.textContent = nf0.format(Math.round(total));
+    const totalPctCell = document.querySelector('[data-totalpct-month="'+m.id+'"]');
+    if(totalPctCell) totalPctCell.textContent = m.revenue>0 ? nf1.format(total/m.revenue*100)+'%' : '—';
+  });
+  dataState.costItems.forEach(ci=>{
+    months.forEach(m=>{
+      const cell = document.querySelector('[data-pct-item="'+ci.id+'"][data-pct-month="'+m.id+'"]');
+      if(cell){
+        const v = getCell(ci.id,m.id)||0;
+        cell.textContent = m.revenue>0 ? nf1.format(v/m.revenue*100)+'%' : '—';
+      }
+    });
+  });
 }
 
 function readMonthTableIntoState(){
@@ -705,10 +755,10 @@ document.getElementById('monthTable').addEventListener('input', e=>{
     const m=dataState.months.find(x=>x.id===t.dataset.month); if(m) m.revenue=Number(t.value)||0;
   } else if(t.matches('input.cell[data-metric="tons"]')){
     const m=dataState.months.find(x=>x.id===t.dataset.month); if(m) m.tons=Number(t.value)||0;
-    renderMonthTable();
   } else if(t.matches('input.cell[data-cost]')){
     setCell(t.dataset.cost, t.dataset.month, Number(t.value)||0);
   }
+  refreshComputedCells();
   renderClassification();
 });
 
