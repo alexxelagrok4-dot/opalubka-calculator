@@ -197,7 +197,6 @@ table.heat td.current-col{outline:2px solid var(--accent);outline-offset:-2px;}
 .auth-note{color:var(--ink-muted);font-size:11.5px;min-height:14px;line-height:1.4;}
 .auth-actions{display:flex;gap:8px;margin-top:2px;}
 .auth-actions .btn{flex:1;}
-.linklike{background:none;border:none;color:var(--accent);font:inherit;font-size:12px;cursor:pointer;padding:0;text-align:left;text-decoration:underline;align-self:flex-start;}
 .userbar{display:flex;justify-content:flex-end;align-items:center;gap:10px;font-size:12.5px;color:var(--ink-2);margin-bottom:8px;}
 .userbar .email{font-family:var(--font-mono);}
 .scenario-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
@@ -212,22 +211,16 @@ table.heat td.current-col{outline:2px solid var(--accent);outline-offset:-2px;}
     <h1>Экономика аренды опалубки</h1>
     <p>Вход для сотрудников. Данные и сохранённые сценарии каждого пользователя видны только ему.</p>
     <div id="normalAuthFields">
-      <input type="email" id="authEmail" placeholder="Email" autocomplete="username">
+      <input type="text" id="authEmail" placeholder="Логин (латиницей, без пробелов)" autocomplete="username">
       <input type="password" id="authPassword" placeholder="Пароль" autocomplete="current-password">
-      <button type="button" id="forgotPasswordBtn" class="linklike">Забыли пароль?</button>
       <div class="auth-error" id="authError"></div>
       <div class="auth-note" id="authNote"></div>
       <div class="auth-actions">
         <button class="btn primary" id="signInBtn">Войти</button>
         <button class="btn" id="signUpBtn">Зарегистрироваться</button>
       </div>
-      <p style="margin-top:10px;text-align:center;font-size:12px;"><a href="instructions.html" target="_blank" rel="noopener">Инструкция: как зарегистрироваться и войти</a></p>
-    </div>
-    <div id="recoveryPanel" style="display:none;">
-      <p>Придумайте новый пароль для входа (минимум 6 символов):</p>
-      <input type="password" id="newPassword" placeholder="Новый пароль" style="margin-bottom:8px;">
-      <div class="auth-error" id="recoveryError"></div>
-      <button class="btn primary" id="setNewPasswordBtn" style="width:100%;">Сохранить новый пароль</button>
+      <p style="margin-top:10px;text-align:center;font-size:12px;color:var(--ink-muted);">Забыли пароль — обратитесь к администратору.</p>
+      <p style="margin-top:2px;text-align:center;font-size:12px;"><a href="instructions.html" target="_blank" rel="noopener">Инструкция: как зарегистрироваться и войти</a></p>
     </div>
   </div>
 </div>
@@ -1239,41 +1232,31 @@ function applyAppState(saved){
   renderAll();
 }
 
+const LOGIN_DOMAIN = '@opalubka.invalid'; // синтетический адрес — реальная почта не нужна и не используется
+function loginToEmail(login){ return login.trim().toLowerCase().replace(/[^a-z0-9_.-]/g,'') + LOGIN_DOMAIN; }
+function emailToLogin(email){ return (email||'').split('@')[0]; }
+
 if(!SUPABASE_CONFIGURED){
   authNote.textContent = 'Вход ещё не настроен администратором — сохранение сценариев пока недоступно.';
   signInBtn.disabled = true; signUpBtn.disabled = true;
 } else {
   signInBtn.addEventListener('click', async ()=>{
     authError.textContent=''; authNote.textContent='';
-    const { error } = await sb.auth.signInWithPassword({ email: authEmail.value.trim(), password: authPassword.value });
-    if(error) authError.textContent = error.message;
+    const login = authEmail.value.trim();
+    if(!login){ authError.textContent='Введите логин.'; return; }
+    const { error } = await sb.auth.signInWithPassword({ email: loginToEmail(login), password: authPassword.value });
+    if(error) authError.textContent = /Invalid login/i.test(error.message) ? 'Неверный логин или пароль.' : error.message;
   });
   signUpBtn.addEventListener('click', async ()=>{
     authError.textContent=''; authNote.textContent='';
-    const { error } = await sb.auth.signUp({ email: authEmail.value.trim(), password: authPassword.value });
-    if(error) authError.textContent = error.message;
-    else authNote.textContent = 'Проверьте почту для подтверждения регистрации, затем войдите.';
+    const login = authEmail.value.trim();
+    if(login.length<3){ authError.textContent='Логин должен быть не короче 3 символов (латиница/цифры).'; return; }
+    if(authPassword.value.length<6){ authError.textContent='Пароль должен быть не короче 6 символов.'; return; }
+    const { error } = await sb.auth.signUp({ email: loginToEmail(login), password: authPassword.value });
+    if(error) authError.textContent = /already registered/i.test(error.message) ? 'Такой логин уже занят — выберите другой.' : error.message;
+    else authNote.textContent = 'Готово — теперь нажмите «Войти».';
   });
   document.getElementById('signOutBtn').addEventListener('click', ()=> sb.auth.signOut());
-
-  document.getElementById('forgotPasswordBtn').addEventListener('click', async ()=>{
-    const email = authEmail.value.trim();
-    authError.textContent='';
-    if(!email){ authError.textContent='Введите email в поле выше, затем нажмите «Забыли пароль?» ещё раз.'; return; }
-    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.href.split('#')[0] });
-    authNote.textContent = error ? error.message : 'Письмо для сброса пароля отправлено на '+email+'. Откройте его и перейдите по ссылке.';
-  });
-  document.getElementById('setNewPasswordBtn').addEventListener('click', async ()=>{
-    const recoveryError = document.getElementById('recoveryError');
-    const pw = document.getElementById('newPassword').value;
-    recoveryError.textContent='';
-    if(pw.length<6){ recoveryError.textContent='Пароль должен быть не короче 6 символов.'; return; }
-    const { error } = await sb.auth.updateUser({ password: pw });
-    if(error){ recoveryError.textContent = error.message; return; }
-    document.getElementById('recoveryPanel').style.display='none';
-    document.getElementById('normalAuthFields').style.display='block';
-    authNote.textContent = 'Пароль обновлён — открываю приложение…';
-  });
 
   let currentScenarioId = null;
 
@@ -1287,7 +1270,7 @@ if(!SUPABASE_CONFIGURED){
       const mine = r.user_id === myId;
       const label = mine
         ? r.name+' ('+new Date(r.updated_at).toLocaleDateString('ru-RU')+')'
-        : r.name+' — от '+(r.owner_email||'коллеги')+', только просмотр';
+        : r.name+' — от '+emailToLogin(r.owner_email)+', только просмотр';
       return '<option value="'+r.id+'" data-owner="'+r.user_id+'">'+label+'</option>';
     }).join('');
   }
@@ -1339,17 +1322,10 @@ if(!SUPABASE_CONFIGURED){
   });
 
   sb.auth.onAuthStateChange((event, session)=>{
-    if(event === 'PASSWORD_RECOVERY'){
-      authScreen.style.display='flex';
-      appRoot.style.display='none';
-      document.getElementById('normalAuthFields').style.display='none';
-      document.getElementById('recoveryPanel').style.display='block';
-      return;
-    }
     if(session){
       authScreen.style.display='none';
       appRoot.style.display='block';
-      userEmailEl.textContent = session.user.email;
+      userEmailEl.textContent = emailToLogin(session.user.email);
       currentScenarioId = null;
       loadScenarioList();
     } else {
