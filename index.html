@@ -203,6 +203,8 @@ table.heat td.current-col{outline:2px solid var(--accent);outline-offset:-2px;}
 .scenario-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
 .scenario-row input[type=text]{flex:1 1 160px;}
 .scenario-row select{flex:1 1 200px;font:inherit;font-size:13px;padding:7px 8px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--bg);color:var(--ink);}
+.share-toggle{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);white-space:nowrap;}
+.share-toggle input{width:auto;}
 </style>
 
 <div id="authScreen" class="auth-screen">
@@ -245,10 +247,13 @@ table.heat td.current-col{outline:2px solid var(--accent);outline-offset:-2px;}
   </div>
 
   <div class="card" id="scenarioPanel">
-    <h2>Мои сценарии <span class="hint">сохраняются в вашем аккаунте, видны только вам</span></h2>
+    <h2>Сценарии <span class="hint">свои — редактируете и удаляете; коллеги видят только те, что вы открыли для просмотра</span></h2>
     <div class="scenario-row">
       <input type="text" id="scenarioName" placeholder="Название сценария">
+      <label class="share-toggle"><input type="checkbox" id="scenarioShared"> Доступен коллегам (только просмотр)</label>
       <button class="btn primary" id="scenarioSaveBtn">Сохранить</button>
+    </div>
+    <div class="scenario-row">
       <select id="scenarioSelect"><option value="">— выберите сценарий —</option></select>
       <button class="btn" id="scenarioLoadBtn">Загрузить</button>
       <button class="btn" id="scenarioDeleteBtn">Удалить</button>
@@ -1273,10 +1278,17 @@ if(!SUPABASE_CONFIGURED){
 
   async function loadScenarioList(){
     const sel = document.getElementById('scenarioSelect');
-    const { data, error } = await sb.from('scenarios').select('id,name,updated_at').order('updated_at',{ascending:false});
+    const { data:{ session } } = await sb.auth.getSession();
+    const myId = session && session.user.id;
+    const { data, error } = await sb.from('scenarios').select('id,name,updated_at,user_id,is_shared,owner_email').order('updated_at',{ascending:false});
     if(error){ sel.innerHTML = '<option value="">— ошибка загрузки —</option>'; return; }
-    sel.innerHTML = '<option value="">— выберите сценарий —</option>' + (data||[]).map(r=>
-      '<option value="'+r.id+'">'+r.name+' ('+new Date(r.updated_at).toLocaleDateString('ru-RU')+')</option>').join('');
+    sel.innerHTML = '<option value="">— выберите сценарий —</option>' + (data||[]).map(r=>{
+      const mine = r.user_id === myId;
+      const label = mine
+        ? r.name+' ('+new Date(r.updated_at).toLocaleDateString('ru-RU')+')'
+        : r.name+' — от '+(r.owner_email||'коллеги')+', только просмотр';
+      return '<option value="'+r.id+'" data-owner="'+r.user_id+'">'+label+'</option>';
+    }).join('');
   }
 
   document.getElementById('scenarioSaveBtn').addEventListener('click', async ()=>{
@@ -1285,12 +1297,13 @@ if(!SUPABASE_CONFIGURED){
     if(!name){ statusEl.textContent='Введите имя сценария.'; return; }
     const { data:{ session } } = await sb.auth.getSession();
     if(!session){ statusEl.textContent='Не авторизованы.'; return; }
-    const row = { user_id: session.user.id, name, payload: serializeAppState() };
+    const isShared = document.getElementById('scenarioShared').checked;
+    const row = { user_id: session.user.id, name, payload: serializeAppState(), is_shared: isShared, owner_email: session.user.email };
     if(currentScenarioId) row.id = currentScenarioId;
     const { data, error } = await sb.from('scenarios').upsert(row).select().single();
     if(error){ statusEl.textContent='Ошибка сохранения: '+error.message; return; }
     currentScenarioId = data.id;
-    statusEl.textContent = 'Сохранено: '+name;
+    statusEl.textContent = 'Сохранено: '+name+(isShared?' (доступно коллегам для просмотра)':'');
     loadScenarioList();
   });
   document.getElementById('scenarioLoadBtn').addEventListener('click', async ()=>{
@@ -1300,14 +1313,23 @@ if(!SUPABASE_CONFIGURED){
     const { data, error } = await sb.from('scenarios').select('*').eq('id', id).single();
     if(error){ statusEl.textContent='Ошибка загрузки: '+error.message; return; }
     applyAppState(data.payload);
-    currentScenarioId = data.id;
-    document.getElementById('scenarioName').value = data.name;
-    statusEl.textContent = 'Загружено: '+data.name;
+    const { data:{ session } } = await sb.auth.getSession();
+    const mine = data.user_id === session.user.id;
+    currentScenarioId = mine ? data.id : null;
+    document.getElementById('scenarioName').value = mine ? data.name : data.name+' (копия)';
+    document.getElementById('scenarioShared').checked = false;
+    statusEl.textContent = mine
+      ? 'Загружено: '+data.name
+      : 'Открыт общий сценарий коллеги «'+data.name+'» — только просмотр. Если измените и нажмёте «Сохранить», создастся ваша отдельная копия.';
   });
   document.getElementById('scenarioDeleteBtn').addEventListener('click', async ()=>{
     const statusEl = document.getElementById('scenarioStatus');
-    const id = document.getElementById('scenarioSelect').value;
+    const sel = document.getElementById('scenarioSelect');
+    const id = sel.value;
     if(!id){ statusEl.textContent='Выберите сценарий из списка.'; return; }
+    const { data:{ session } } = await sb.auth.getSession();
+    const opt = sel.selectedOptions[0];
+    if(!opt || opt.dataset.owner !== session.user.id){ statusEl.textContent='Можно удалять только свои сценарии.'; return; }
     const { error } = await sb.from('scenarios').delete().eq('id', id);
     if(error){ statusEl.textContent='Ошибка удаления: '+error.message; return; }
     if(currentScenarioId===id) currentScenarioId=null;
