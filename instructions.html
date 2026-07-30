@@ -1,0 +1,120 @@
+<title>Вход в калькулятор аренды опалубки — инструкция</title>
+<style>
+:root{
+  color-scheme: light;
+  --bg:#F3F4F1; --surface:#FFFFFF; --surface-2:#ECEEEA;
+  --ink:#14181A; --ink-2:#4B534E; --ink-muted:#838A83;
+  --border:rgba(20,24,26,0.12); --border-strong:rgba(20,24,26,0.22);
+  --accent:#2a78d6; --critical:#d03b3b; --good:#0ca30c;
+  --radius:10px; --radius-sm:6px;
+  --font-ui: system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono: ui-monospace,"Cascadia Mono","Consolas","SFMono-Regular",monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#12161A; --surface:#1A2024; --surface-2:#202830;
+    --ink:#ECEFEC; --ink-2:#A9B2AC; --ink-muted:#7C8680;
+    --border:rgba(255,255,255,0.12); --border-strong:rgba(255,255,255,0.22);
+    --accent:#3987e5;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#12161A; --surface:#1A2024; --surface-2:#202830;
+  --ink:#ECEFEC; --ink-2:#A9B2AC; --ink-muted:#7C8680;
+  --border:rgba(255,255,255,0.12); --border-strong:rgba(255,255,255,0.22);
+  --accent:#3987e5;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-ui);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+.wrap{max-width:760px;margin:0 auto;padding:40px 24px 100px;}
+a{color:var(--accent);}
+h1{font-size:26px;font-weight:700;letter-spacing:-0.01em;text-wrap:balance;margin:0 0 6px;}
+h2{font-size:18px;font-weight:700;margin:34px 0 12px;padding-top:14px;border-top:1px solid var(--border);}
+h2:first-of-type{border-top:none;padding-top:0;}
+p{color:var(--ink-2);margin:0 0 14px;}
+.linkbox{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin:16px 0 24px;}
+.linkbox a{font-family:var(--font-mono);font-size:14.5px;font-weight:600;word-break:break-all;}
+ol,ul{padding-left:22px;color:var(--ink);}
+li{margin-bottom:8px;}
+li ul{margin-top:6px;}
+strong{color:var(--ink);}
+code{font-family:var(--font-mono);background:var(--surface-2);padding:1px 5px;border-radius:4px;font-size:0.92em;}
+table{border-collapse:collapse;width:100%;margin:16px 0;font-size:14px;}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top;}
+th{background:var(--surface-2);font-size:12px;text-transform:uppercase;letter-spacing:0.04em;color:var(--ink-2);}
+.note-important{background:color-mix(in srgb, var(--accent) 8%, var(--surface));border:1px solid color-mix(in srgb, var(--accent) 30%, var(--border));border-radius:var(--radius-sm);padding:12px 14px;margin:14px 0;}
+.back{display:inline-block;margin-top:36px;font-size:14px;}
+</style>
+
+<div class="wrap">
+  <h1>Вход в калькулятор аренды опалубки</h1>
+  <p>Пошаговая инструкция: регистрация, вход, восстановление пароля и обмен сценариями между сотрудниками.</p>
+
+  <div class="linkbox">
+    Ссылка на инструмент: <a href="https://alexxelagrok4-dot.github.io/opalubka-calculator/">https://alexxelagrok4-dot.github.io/opalubka-calculator/</a>
+    <p style="margin:10px 0 0;">Открывается в любом браузере (Chrome, Edge, Safari), ничего устанавливать не нужно. У каждого сотрудника — свой личный вход; сохранённые сценарии видны только тому, кто их сохранил (если не включена галочка «доступен коллегам»).</p>
+  </div>
+
+  <h2>Первый раз: регистрация</h2>
+  <ol>
+    <li>Откройте ссылку выше.</li>
+    <li>В поле <strong>Email</strong> введите свою рабочую почту.</li>
+    <li>В поле <strong>Пароль</strong> придумайте пароль (минимум 6 символов) и запомните его.</li>
+    <li>Нажмите <strong>Зарегистрироваться</strong>.</li>
+    <li>Откройте почту — придёт письмо от <strong>Supabase Auth</strong> (<code>noreply@mail.app.supabase.io</code>) с темой <strong>Confirm your email address</strong>. Перейдите по ссылке в письме.
+      <ul><li>Если письма нет 2–3 минуты — проверьте папку «Спам».</li></ul>
+    </li>
+    <li>Вернитесь на страницу калькулятора, введите тот же email и пароль и нажмите <strong>Войти</strong>.</li>
+  </ol>
+
+  <h2>Обычный вход</h2>
+  <ol>
+    <li>Откройте ссылку.</li>
+    <li>Введите <strong>Email</strong> и <strong>Пароль</strong>.</li>
+    <li>Нажмите <strong>Войти</strong>.</li>
+  </ol>
+  <p>Дальше откроется сам инструмент — вкладки «Данные и классификация» и «Калькулятор», а вверху справа — email и кнопка <strong>Выйти</strong>.</p>
+
+  <h2>Забыли пароль</h2>
+  <ol>
+    <li>На экране входа введите свой email.</li>
+    <li>Нажмите ссылку <strong>Забыли пароль?</strong> под полем пароля.</li>
+    <li>Придёт письмо со ссылкой для сброса — перейдите по ней.</li>
+    <li>На странице калькулятора откроется поле <strong>Новый пароль</strong> — введите новый пароль (минимум 6 символов) и нажмите <strong>Сохранить новый пароль</strong>.</li>
+    <li>Инструмент откроется автоматически под новым паролем.</li>
+  </ol>
+
+  <h2>Как сохранять и открывать свою работу</h2>
+  <p>Внутри инструмента, под вкладками, есть панель <strong>Сценарии</strong>:</p>
+  <ul>
+    <li><strong>Сохранить</strong> — впишите название и нажмите «Сохранить»: сохранятся все введённые месячные данные, классификация затрат и параметры калькулятора под этим именем.</li>
+    <li><strong>Загрузить</strong> — выберите сценарий из списка и нажмите «Загрузить», чтобы вернуть его на экран (работает с любого компьютера — данные хранятся в вашем аккаунте, не в браузере).</li>
+    <li><strong>Удалить</strong> — убирает выбранный сценарий насовсем. Работает только со своими сценариями.</li>
+  </ul>
+
+  <h2>Как поделиться сценарием с коллегой</h2>
+  <p>По умолчанию сценарии видны только вам. Чтобы коллега (со своим отдельным входом) мог его посмотреть:</p>
+  <ol>
+    <li>Перед сохранением поставьте галочку <strong>«Доступен коллегам (только просмотр)»</strong> рядом с полем названия.</li>
+    <li>Нажмите <strong>Сохранить</strong>.</li>
+    <li>Коллега увидит его в своём списке с пометкой «— от вашей почты, только просмотр» и сможет нажать «Загрузить».</li>
+  </ol>
+  <div class="note-important">
+    Коллега <strong>не может</strong> редактировать или удалить ваш сценарий — если он что-то поменяет и нажмёт «Сохранить», у него создастся собственная отдельная копия, ваш оригинал не тронется. Общий сценарий видят все, у кого есть вход в инструмент, а не только один выбранный человек.
+  </div>
+
+  <h2>Если что-то не работает</h2>
+  <table>
+    <tr><th>Проблема</th><th>Что делать</th></tr>
+    <tr><td>Не приходит письмо (регистрация или сброс пароля)</td><td>Проверьте «Спам». Если писем было много подряд за короткое время — сервис на минуту-две ограничивает частоту отправки, подождите и повторите.</td></tr>
+    <tr><td>«Email not confirmed» при входе</td><td>Регистрация прошла, но письмо ещё не подтверждено — найдите его и перейдите по ссылке.</td></tr>
+    <tr><td>Кнопки входа неактивны, сообщение «Вход ещё не настроен»</td><td>Обратитесь к администратору — техническая часть входа временно не подключена.</td></tr>
+    <tr><td>Не видно сценарий, который сохранял коллега</td><td>Убедитесь, что коллега включил галочку «Доступен коллегам» при сохранении.</td></tr>
+    <tr><td>Кнопка «Удалить» пишет «можно удалять только свои сценарии»</td><td>Так и должно быть — вы выбрали чужой общий сценарий; удалить его может только автор.</td></tr>
+  </table>
+
+  <a class="back" href="https://alexxelagrok4-dot.github.io/opalubka-calculator/">← Открыть калькулятор</a>
+</div>
