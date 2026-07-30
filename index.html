@@ -657,6 +657,16 @@ function ensureClassDefault(ci, stat){
     c = { type:'fixed', typeAuto:true, basis:'ton', basisAuto:true, fixedValue:0, fixedValueAuto:true };
     dataState.classification[ci.id] = c;
   }
+  // Данные из старых сохранённых сценариев (до появления этих флагов) не должны молча
+  // переклассифицироваться заново — тип/базис там уже осознанный выбор человека, его нельзя
+  // затирать угадыванием алгоритма (особенно когда объём почти не менялся и угадать всё равно
+  // нельзя надёжно). А вот значение "Постоянные, ₽" в старых данных могло навсегда застрять
+  // на нуле (посчитано ещё до того, как в эту статью попали реальные цифры) — его пересчитываем,
+  // если оно подозрительно пустое, но не трогаем, если там уже стоит осмысленное число.
+  if(c.typeAuto===undefined) c.typeAuto = false;
+  if(c.basisAuto===undefined) c.basisAuto = false;
+  if(c.fixedValueAuto===undefined) c.fixedValueAuto = !c.fixedValue;
+  if(c.type==='step'){ c.type='fixed'; c.typeAuto=false; if(!c.fixedValue) c.fixedValueAuto=true; } // ступенчатые больше не поддерживаются — считаем постоянными
   // Поля, которые пользователь ещё не трогал руками, продолжают пересчитываться по мере поступления данных
   if(c.typeAuto) c.type = stat.suggestion==='none' ? 'fixed' : stat.suggestion;
   if(c.basisAuto) c.basis = stat.defaultBasis||'ton';
