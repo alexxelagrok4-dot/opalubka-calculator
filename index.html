@@ -147,9 +147,10 @@ input[type=range]{width:100%;accent-color:var(--accent);}
 .dyn-row input[type=text]{flex:1 1 110px;min-width:90px;}
 .dyn-row input[type=number]{width:88px;}
 .dyn-row .rowdel{margin-left:auto;}
-.basis-toggle{display:flex;border:1px solid var(--border-strong);border-radius:var(--radius-sm);overflow:hidden;font-size:11px;}
-.basis-toggle button{border:none;background:var(--surface-2);color:var(--ink-2);padding:5px 7px;cursor:pointer;font:inherit;font-weight:600;}
-.basis-toggle button.on{background:var(--accent);color:var(--accent-ink);}
+.dyn-row-static{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:6px 0;border-bottom:1px dashed var(--border);font-size:12.5px;}
+.dyn-row-static:last-child{border-bottom:none;}
+.dyn-row-static .dyn-name{color:var(--ink-2);}
+.dyn-row-static .dyn-value{font-family:var(--font-mono);font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;}
 .total-line{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-2);margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);font-family:var(--font-mono);font-variant-numeric:tabular-nums;}
 
 .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
@@ -238,7 +239,7 @@ table.heat td.current-col{outline:2px solid var(--accent);outline-offset:-2px;}
       <button class="btn" id="signOutBtn">Выйти</button>
     </div>
     <h1>Экономика аренды опалубки</h1>
-    <p>Вкладка 1 — фактические ежемесячные данные и их разнесение на переменные / ступенчатые / постоянные затраты. Вкладка 2 — калькулятор «что если»: меняете цену и загрузку, видите выручку, затраты, прибыль и точку безубыточности.</p>
+    <p>Вкладка 1 — фактические ежемесячные данные и их разнесение на переменные / постоянные затраты. Вкладка 2 — калькулятор «что если»: меняете цену и загрузку, видите выручку, затраты, прибыль и точку безубыточности.</p>
   </header>
 
   <div class="tabs" role="tablist">
@@ -290,8 +291,8 @@ table.heat td.current-col{outline:2px solid var(--accent);outline-offset:-2px;}
     </div>
 
     <div class="transfer-bar">
-      <span class="msg" id="transferMsg"></span>
-      <button class="btn primary" id="transferBtn">Перенести в калькулятор →</button>
+      <span class="msg">Данные и классификация выше автоматически используются в калькуляторе.</span>
+      <button class="btn primary" id="transferBtn">Перейти к калькулятору →</button>
     </div>
   </section>
 
@@ -301,8 +302,7 @@ table.heat td.current-col{outline:2px solid var(--accent);outline-offset:-2px;}
         <div class="card">
           <h2>Параметры</h2>
           <div class="slider-row">
-            <div class="top"><span>Парк, тонн</span><span class="val" id="v-fleet">8000</span></div>
-            <input type="number" id="c-fleet" value="8000" min="0" step="10">
+            <div class="top"><span>Парк, тонн <span class="hint">(из вкладки 1)</span></span><span class="val" id="v-fleet">8000</span></div>
           </div>
           <div class="slider-row">
             <div class="top"><span>Ставка, ₽/тонну/сутки</span><span class="val" id="v-rate">70</span></div>
@@ -321,23 +321,14 @@ table.heat td.current-col{outline:2px solid var(--accent);outline-offset:-2px;}
         </div>
 
         <div class="card">
-          <h2>Переменные затраты <span class="hint">% от выручки или ₽/тонну в аренде</span></h2>
+          <h2>Переменные затраты <span class="hint">% от выручки или ₽/тонну — рассчитано по вкладке 1</span></h2>
           <div id="varRows"></div>
-          <button class="btn" id="addVarBtn">+ Статья</button>
           <div class="total-line"><span>Итого при текущих цене/загрузке</span><span id="varTotal">—</span></div>
         </div>
 
         <div class="card">
-          <h2>Ступенчатые затраты <span class="hint">растут скачком при превышении порога тонн в аренде</span></h2>
-          <div id="stepRows"></div>
-          <button class="btn" id="addStepBtn">+ Статья</button>
-          <div class="total-line"><span>Итого при текущей загрузке</span><span id="stepTotal">—</span></div>
-        </div>
-
-        <div class="card">
-          <h2>Постоянные издержки <span class="hint">не зависят от объёма</span></h2>
+          <h2>Постоянные издержки <span class="hint">не зависят от объёма — рассчитано по вкладке 1</span></h2>
           <div id="fixedRows"></div>
-          <button class="btn" id="addFixedBtn">+ Статья</button>
           <div class="total-line"><span>Итого</span><span id="fixedTotal">—</span></div>
         </div>
       </aside>
@@ -346,7 +337,6 @@ table.heat td.current-col{outline:2px solid var(--accent);outline-offset:-2px;}
         <div class="kpi-row">
           <div class="kpi"><div class="label">Выручка</div><div class="value" id="k-revenue">—</div></div>
           <div class="kpi"><div class="label">Переменные затраты</div><div class="value" id="k-var">—</div></div>
-          <div class="kpi"><div class="label">Ступенчатые затраты</div><div class="value" id="k-step">—</div></div>
           <div class="kpi"><div class="label">Постоянные издержки</div><div class="value" id="k-fixed">—</div></div>
           <div class="kpi"><div class="label">Итого затрат</div><div class="value" id="k-total">—</div></div>
           <div class="kpi"><div class="label">Прибыль / убыток</div><div class="value" id="k-profit">—</div><div id="k-pill"></div></div>
@@ -356,7 +346,7 @@ table.heat td.current-col{outline:2px solid var(--accent);outline-offset:-2px;}
 
         <div class="chart-card">
           <h3>Прибыль в зависимости от загрузки</h3>
-          <div class="desc">При текущей цене — как меняется прибыль от 0 до 100% загрузки. Пунктир — пороги ступенчатых затрat. Точка — текущее положение.</div>
+          <div class="desc">При текущей цене — как меняется прибыль от 0 до 100% загрузки. Точка — текущее положение.</div>
           <svg id="lineChart" viewBox="0 0 960 320" width="100%" style="display:block;overflow:visible;"></svg>
           <div class="chips" id="crossChips"></div>
         </div>
@@ -628,62 +618,49 @@ function sparkSvg(pairs, color){
 function classify(ci){
   const months = dataState.months;
   const rows = months.map(m=>({tons:m.tons, revenue:m.revenue, cost:getCell(ci.id,m.id)}))
-                     .filter(r=>r.cost!==null && r.tons!==null);
+                     .filter(r=>r.cost!==null);
   const n = rows.length;
-  const th = theme();
   if(n<2){
     return {n, suggestion:'none', note:'Введите данные минимум за 2 месяца.'};
   }
   const tons=rows.map(r=>r.tons), revenue=rows.map(r=>r.revenue), cost=rows.map(r=>r.cost);
+  const sumCost = cost.reduce((a,b)=>a+b,0), sumRevenue = revenue.reduce((a,b)=>a+b,0), sumTons = tons.reduce((a,b)=>a+b,0);
   const cTons = pearson(cost,tons), cRev = pearson(cost,revenue);
   const cv = mean(cost)!==0 ? stdev(cost)/Math.abs(mean(cost)) : 0;
   const cvTons = mean(tons)!==0 ? stdev(tons)/Math.abs(mean(tons)) : 0;
-  const rgTons = linreg(tons,cost), rgRev = linreg(revenue,cost);
-  const meanCost = mean(cost)||0;
+  const meanCost = sumCost/n;
+  const pctOfRevenue = sumRevenue>0 ? sumCost/sumRevenue*100 : null;
+  const perTon = sumTons>0 ? sumCost/sumTons : null;
 
-  let suggestion='fixed', note='';
+  let suggestion, note='';
   const lowVolumeVariance = cvTons < 0.05;
   if(lowVolumeVariance){
     note = 'Объём в данных почти не менялся — надёжно отличить переменные от постоянных затрат по этим месяцам нельзя. Добавьте месяцы с разной загрузкой.';
   }
-  const tonsFit = isFinite(cTons) && Math.abs(cTons)>=0.7 && Math.abs(rgTons.intercept) < 0.35*Math.max(meanCost,1);
-  const revFit = isFinite(cRev) && Math.abs(cRev)>=0.7 && Math.abs(rgRev.intercept) < 0.35*Math.max(meanCost,1);
-
-  if(!lowVolumeVariance && tonsFit && (!revFit || rgTons.r2>=rgRev.r2)){
+  if(!lowVolumeVariance && (Math.abs(cTons)>=0.7 || Math.abs(cRev)>=0.7)){
     suggestion='variable';
-  } else if(!lowVolumeVariance && revFit){
-    suggestion='variable-rev';
   } else if(cv < 0.15){
     suggestion='fixed';
   } else if(!lowVolumeVariance){
-    suggestion='step';
+    suggestion='variable';
   } else {
     suggestion='fixed';
   }
+  const defaultBasis = (isFinite(cRev) && isFinite(cTons) && Math.abs(cRev)>Math.abs(cTons)) ? 'revenue' : 'ton';
 
-  // jump detection for step candidate
-  let stepGuess=null;
-  const sorted = rows.slice().sort((a,b)=>a.tons-b.tons);
-  let bestJump=0, bestAt=null;
-  for(let i=1;i<sorted.length;i++){
-    const jump = sorted[i].cost - sorted[i-1].cost;
-    if(jump>bestJump){ bestJump=jump; bestAt=sorted[i]; }
-  }
-  if(bestAt && bestJump > 0.2*Math.max(meanCost,1)){
-    stepGuess = {threshold: Math.max(1,Math.round(bestAt.tons/100)*100), stepCost: Math.round(bestJump)};
-  }
-
-  return {n, cTons, cRev, cv, cvTons, rgTons, rgRev, meanCost, suggestion, note, stepGuess, rows: sorted};
+  return {n, cTons, cRev, cv, cvTons, sumCost, sumRevenue, sumTons, meanCost, pctOfRevenue, perTon, suggestion, defaultBasis, note, rows: rows.slice().sort((a,b)=>a.tons-b.tons)};
 }
 
 function ensureClassDefault(ci, stat){
-  if(dataState.classification[ci.id]) return dataState.classification[ci.id];
-  let type = stat.suggestion==='variable-rev' ? 'variable' : (stat.suggestion==='none'?'fixed':stat.suggestion);
-  const c = { type, basis:'ton', varValue:0, threshold:5000, stepCost:0, minSteps:1, fixedValue:Math.round(stat.meanCost||0) };
-  if(stat.suggestion==='variable'){ c.basis='ton'; c.varValue = Math.max(0, Math.round(stat.rgTons.slope*100)/100); }
-  if(stat.suggestion==='variable-rev'){ c.basis='revenue'; c.varValue = Math.round(stat.rgRev.slope*10000)/100; }
-  if(stat.suggestion==='step' && stat.stepGuess){ c.threshold=stat.stepGuess.threshold; c.stepCost=stat.stepGuess.stepCost; }
-  dataState.classification[ci.id]=c;
+  let c = dataState.classification[ci.id];
+  if(!c){
+    c = { type:'fixed', typeAuto:true, basis:'ton', basisAuto:true, fixedValue:0, fixedValueAuto:true };
+    dataState.classification[ci.id] = c;
+  }
+  // Поля, которые пользователь ещё не трогал руками, продолжают пересчитываться по мере поступления данных
+  if(c.typeAuto) c.type = stat.suggestion==='none' ? 'fixed' : stat.suggestion;
+  if(c.basisAuto) c.basis = stat.defaultBasis||'ton';
+  if(c.fixedValueAuto) c.fixedValue = Math.round(stat.meanCost||0);
   return c;
 }
 
@@ -694,8 +671,8 @@ function renderClassification(){
   dataState.costItems.forEach(ci=>{
     const stat = classify(ci);
     const c = ensureClassDefault(ci, stat);
-    const badgeClass = c.type==='variable'?'b-var':c.type==='step'?'b-step':'b-fixed';
-    const badgeColor = c.type==='variable'?th.divPos:c.type==='step'?getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim():th.inkMuted;
+    const badgeClass = c.type==='variable'?'b-var':'b-fixed';
+    const badgeColor = c.type==='variable'?th.divPos:th.inkMuted;
     const spark = stat.rows ? sparkSvg(stat.rows.map(r=>({x:r.tons,y:r.cost})), badgeColor) : '';
     const statsLine = stat.n<2
       ? (stat.note||'')
@@ -703,26 +680,22 @@ function renderClassification(){
 
     html += '<div class="class-item" data-item="'+ci.id+'">';
     html += '<div class="name">'+ci.name+'</div>';
-    html += '<span class="badge '+badgeClass+'">'+(c.type==='variable'?'Переменные':c.type==='step'?'Ступенчатые':'Постоянные')+'</span>';
+    html += '<span class="badge '+badgeClass+'">'+(c.type==='variable'?'Переменные':'Постоянные')+'</span>';
     html += spark;
     html += '<div class="stats">'+statsLine+'</div>';
     html += '<select data-classify="'+ci.id+'">'
       + '<option value="variable"'+(c.type==='variable'?' selected':'')+'>Переменные</option>'
-      + '<option value="step"'+(c.type==='step'?' selected':'')+'>Ступенчатые</option>'
       + '<option value="fixed"'+(c.type==='fixed'?' selected':'')+'>Постоянные</option>'
       + '</select>';
     html += '<div class="params">';
     if(c.type==='variable'){
+      const pctText = stat.pctOfRevenue!=null ? nf1.format(stat.pctOfRevenue)+'%' : '—';
+      const perTonText = stat.perTon!=null ? nf0.format(Math.round(stat.perTon))+' ₽/т' : '—';
+      html += '<div class="row">По данным: <b>'+pctText+'</b> от выручки · <b>'+perTonText+'</b></div>';
       html += '<div class="row radios">'
-        + '<label><input type="radio" name="basis-'+ci.id+'" value="ton" '+(c.basis==='ton'?'checked':'')+' data-basis="'+ci.id+'"> ₽/тонну</label>'
-        + '<label><input type="radio" name="basis-'+ci.id+'" value="revenue" '+(c.basis==='revenue'?'checked':'')+' data-basis="'+ci.id+'"> % от выручки</label>'
+        + '<label><input type="radio" name="basis-'+ci.id+'" value="ton" '+(c.basis==='ton'?'checked':'')+' data-basis="'+ci.id+'"> считать по ₽/тонну</label>'
+        + '<label><input type="radio" name="basis-'+ci.id+'" value="revenue" '+(c.basis==='revenue'?'checked':'')+' data-basis="'+ci.id+'"> считать по % от выручки</label>'
         + '</div>';
-      html += '<div class="row">Значение <input type="number" step="0.01" data-varvalue="'+ci.id+'" value="'+c.varValue+'"> '+(c.basis==='ton'?'₽/т':'%')+'</div>';
-    } else if(c.type==='step'){
-      html += '<div class="row">Порог <input type="number" step="100" data-threshold="'+ci.id+'" value="'+c.threshold+'"> т/ступень</div>';
-      html += '<div class="row">Стоимость ступени <input type="number" step="1000" data-stepcost="'+ci.id+'" value="'+c.stepCost+'"> ₽</div>';
-      html += '<div class="row">Мин. ступеней <input type="number" step="1" min="0" data-minsteps="'+ci.id+'" value="'+c.minSteps+'"></div>';
-      if(!stat.stepGuess && stat.n>=2) html += '<div class="note">Явного скачка в данных не видно — порог задан ориентировочно, уточните вручную.</div>';
     } else {
       html += '<div class="row">Значение <input type="number" step="1000" data-fixedvalue="'+ci.id+'" value="'+c.fixedValue+'"> ₽/период</div>';
     }
@@ -731,6 +704,7 @@ function renderClassification(){
     html += '</div>';
   });
   grid.innerHTML = html;
+  syncCalculatorFromData();
 }
 
 function refreshDataTab(){
@@ -741,6 +715,7 @@ function refreshDataTab(){
 document.getElementById('fleetTons').addEventListener('input', e=>{
   dataState.fleetTons = Number(e.target.value)||0;
   renderMonthTable();
+  syncCalculatorFromData();
 });
 
 document.getElementById('monthTable').addEventListener('input', e=>{
@@ -791,16 +766,12 @@ document.getElementById('addCostRowBtn').addEventListener('click', ()=>{
 
 document.getElementById('classGrid').addEventListener('change', e=>{
   const t=e.target;
-  const id = t.dataset.classify||t.dataset.basis||t.dataset.varvalue||t.dataset.threshold||t.dataset.stepcost||t.dataset.minsteps||t.dataset.fixedvalue;
+  const id = t.dataset.classify||t.dataset.basis||t.dataset.fixedvalue;
   if(!id) return;
   const c = dataState.classification[id]; if(!c) return;
-  if(t.dataset.classify) c.type = t.value;
-  if(t.dataset.basis) c.basis = t.value;
-  if(t.dataset.varvalue) c.varValue = Number(t.value)||0;
-  if(t.dataset.threshold) c.threshold = Number(t.value)||1;
-  if(t.dataset.stepcost) c.stepCost = Number(t.value)||0;
-  if(t.dataset.minsteps) c.minSteps = Number(t.value)||0;
-  if(t.dataset.fixedvalue) c.fixedValue = Number(t.value)||0;
+  if(t.dataset.classify){ c.type = t.value; c.typeAuto = false; }
+  if(t.dataset.basis){ c.basis = t.value; c.basisAuto = false; }
+  if(t.dataset.fixedvalue){ c.fixedValue = Number(t.value)||0; c.fixedValueAuto = false; }
   renderClassification();
 });
 
@@ -808,35 +779,12 @@ document.getElementById('classGrid').addEventListener('change', e=>{
    TAB 2 — calculator
    ========================================================= */
 const calcState = {
-  fleetTons: 8000, rate: 70, utilization: 50, days: 30,
-  varItems: [
-    {id:uid(), name:'Маркетинг', basis:'revenue', value:3},
-    {id:uid(), name:'Выплаты отделу аренды', basis:'revenue', value:8},
-    {id:uid(), name:'Налоги (НДС)', basis:'revenue', value:20},
-    {id:uid(), name:'Ремонт', basis:'ton', value:180},
-    {id:uid(), name:'ФОТ СБ', basis:'ton', value:45},
-    {id:uid(), name:'Потери', basis:'ton', value:25}
-  ],
-  stepItems: [
-    {id:uid(), name:'Аренда и обслуживание склада', threshold:5000, cost:800000, minSteps:1},
-    {id:uid(), name:'ФОТ складского персонала', threshold:5000, cost:350000, minSteps:1},
-    {id:uid(), name:'ФОТ проектировщика', threshold:10000, cost:180000, minSteps:0}
-  ],
-  fixedItems: [
-    {id:uid(), name:'Постоянные издержки (админ, офис и пр.)', value:1200000}
-  ]
+  fleetTons: 0, rate: 70, utilization: 50, days: 30,
+  rateAuto: true, utilizationAuto: true,
+  varItems: [],
+  fixedItems: []
 };
 
-function stepCostsAt(utilizedTons){
-  let total=0; const breakdown=[];
-  calcState.stepItems.forEach(it=>{
-    const raw = it.threshold>0 ? Math.ceil(utilizedTons/it.threshold) : 0;
-    const steps = Math.max(it.minSteps||0, raw);
-    const cost = steps*it.cost;
-    total+=cost; breakdown.push({name:it.name, steps, cost});
-  });
-  return {total, breakdown};
-}
 function varPctSum(){ return calcState.varItems.filter(i=>i.basis==='revenue').reduce((s,i)=>s+Number(i.value||0),0); }
 function varTonSum(){ return calcState.varItems.filter(i=>i.basis==='ton').reduce((s,i)=>s+Number(i.value||0),0); }
 function fixedSum(){ return calcState.fixedItems.reduce((s,i)=>s+Number(i.value||0),0); }
@@ -846,11 +794,10 @@ function computeAt(utilPct, rate){
   const revenue = rate*utilizedTons*calcState.days;
   const pct = varPctSum()/100;
   const variableCosts = revenue*pct + utilizedTons*varTonSum();
-  const {total:stepTotal, breakdown:stepBreakdown} = stepCostsAt(utilizedTons);
   const fixed = fixedSum();
-  const totalCosts = variableCosts+stepTotal+fixed;
+  const totalCosts = variableCosts+fixed;
   const profit = revenue-totalCosts;
-  return {utilizedTons, revenue, variableCosts, stepTotal, stepBreakdown, fixed, totalCosts, profit,
+  return {utilizedTons, revenue, variableCosts, fixed, totalCosts, profit,
           marginPerTon: utilizedTons>0?profit/utilizedTons:0};
 }
 function breakevenRateForUtil(utilPct){
@@ -859,8 +806,7 @@ function breakevenRateForUtil(utilPct){
   const pct = varPctSum()/100;
   const coeff = utilizedTons*calcState.days*(1-pct);
   if(coeff<=0) return {value:null, reason:'impossible'};
-  const {total:stepTotal} = stepCostsAt(utilizedTons);
-  const fixedPart = utilizedTons*varTonSum() + stepTotal + fixedSum();
+  const fixedPart = utilizedTons*varTonSum() + fixedSum();
   return {value: fixedPart/coeff, reason:'ok'};
 }
 function scanUtilization(rate, steps){
@@ -881,100 +827,65 @@ function scanUtilization(rate, steps){
   return {pts, crossings};
 }
 
-/* ---- render dynamic rows (sidebar) ---- */
+/* ---- Tab 1 → Tab 2 automatic sync ---- */
+function syncCalculatorFromData(){
+  calcState.fleetTons = dataState.fleetTons;
+  const newVar=[], newFixed=[];
+  dataState.costItems.forEach(ci=>{
+    const c = dataState.classification[ci.id];
+    if(!c) return;
+    if(c.type==='variable'){
+      const stat = classify(ci);
+      const value = c.basis==='revenue' ? (stat.pctOfRevenue||0) : (stat.perTon||0);
+      newVar.push({id:ci.id, name:ci.name, basis:c.basis, value});
+    } else {
+      newFixed.push({id:ci.id, name:ci.name, value:c.fixedValue||0});
+    }
+  });
+  calcState.varItems = newVar;
+  calcState.fixedItems = newFixed;
+
+  if(calcState.rateAuto || calcState.utilizationAuto){
+    const validMonths = dataState.months.filter(m=>m.tons>0 && m.revenue>0);
+    if(validMonths.length){
+      if(calcState.rateAuto){
+        const rates = validMonths.map(m=> m.revenue/(m.tons*calcState.days));
+        calcState.rate = Math.round(mean(rates));
+        elRate.value = calcState.rate; elRateRange.value = Math.min(Number(elRateRange.max), calcState.rate);
+      }
+      if(calcState.utilizationAuto){
+        const avgTons = mean(validMonths.map(m=>m.tons));
+        calcState.utilization = calcState.fleetTons>0 ? Math.min(100, Math.round(avgTons/calcState.fleetTons*1000)/10) : calcState.utilization;
+        elUtil.value = calcState.utilization; elUtilRange.value = calcState.utilization;
+      }
+    }
+  }
+
+  document.getElementById('v-fleet').textContent = nf0.format(calcState.fleetTons);
+  renderVarRows(); renderFixedRows();
+  renderAll();
+}
+
+/* ---- render dynamic rows (sidebar) — read-only, derived from Tab 1 ---- */
 function renderVarRows(){
   const el = document.getElementById('varRows');
+  if(!calcState.varItems.length){ el.innerHTML='<div class="note">Нет статей — классифицируйте затраты как переменные на вкладке 1.</div>'; return; }
   el.innerHTML = calcState.varItems.map(it=>
-    '<div class="dyn-row" data-row="'+it.id+'">'
-    +'<input type="text" data-v-name="'+it.id+'" value="'+it.name+'">'
-    +'<div class="basis-toggle"><button type="button" data-v-basis="'+it.id+'" data-val="ton" class="'+(it.basis==='ton'?'on':'')+'">₽/т</button>'
-    +'<button type="button" data-v-basis="'+it.id+'" data-val="revenue" class="'+(it.basis==='revenue'?'on':'')+'">%выр</button></div>'
-    +'<input type="number" step="0.01" data-v-value="'+it.id+'" value="'+it.value+'">'
-    +'<button class="rowdel" data-v-del="'+it.id+'">×</button>'
-    +'</div>').join('');
-}
-function renderStepRows(){
-  const el = document.getElementById('stepRows');
-  el.innerHTML = calcState.stepItems.map(it=>
-    '<div class="dyn-row" data-row="'+it.id+'">'
-    +'<input type="text" data-s-name="'+it.id+'" value="'+it.name+'" style="flex-basis:100%;">'
-    +'<input type="number" step="100" data-s-threshold="'+it.id+'" value="'+it.threshold+'" title="порог, т">'
-    +'<input type="number" step="1000" data-s-cost="'+it.id+'" value="'+it.cost+'" title="₽ за ступень">'
-    +'<input type="number" step="1" min="0" data-s-min="'+it.id+'" value="'+it.minSteps+'" title="мин. ступеней" style="width:56px;">'
-    +'<button class="rowdel" data-s-del="'+it.id+'">×</button>'
+    '<div class="dyn-row-static">'
+    +'<span class="dyn-name">'+it.name+'</span>'
+    +'<span class="dyn-value">'+(it.basis==='ton' ? nf0.format(Math.round(it.value))+' ₽/т' : nf1.format(it.value)+'%')+'</span>'
     +'</div>').join('');
 }
 function renderFixedRows(){
   const el = document.getElementById('fixedRows');
+  if(!calcState.fixedItems.length){ el.innerHTML='<div class="note">Нет статей — классифицируйте затраты как постоянные на вкладке 1.</div>'; return; }
   el.innerHTML = calcState.fixedItems.map(it=>
-    '<div class="dyn-row" data-row="'+it.id+'">'
-    +'<input type="text" data-f-name="'+it.id+'" value="'+it.name+'">'
-    +'<input type="number" step="1000" data-f-value="'+it.id+'" value="'+it.value+'">'
-    +'<button class="rowdel" data-f-del="'+it.id+'">×</button>'
+    '<div class="dyn-row-static">'
+    +'<span class="dyn-name">'+it.name+'</span>'
+    +'<span class="dyn-value">'+fmtRub(it.value)+'</span>'
     +'</div>').join('');
 }
 
-document.getElementById('varRows').addEventListener('input', e=>{
-  const t=e.target;
-  const it = calcState.varItems.find(i=>i.id===(t.dataset.vName||t.dataset.vValue));
-  if(!it) return;
-  if(t.dataset.vName) it.name=t.value;
-  if(t.dataset.vValue) it.value=Number(t.value)||0;
-  renderAll();
-});
-document.getElementById('varRows').addEventListener('click', e=>{
-  if(e.target.dataset.vBasis){
-    const it=calcState.varItems.find(i=>i.id===e.target.dataset.vBasis);
-    if(it){ it.basis=e.target.dataset.val; renderVarRows(); renderAll(); }
-  } else if(e.target.dataset.vDel){
-    calcState.varItems = calcState.varItems.filter(i=>i.id!==e.target.dataset.vDel);
-    renderVarRows(); renderAll();
-  }
-});
-document.getElementById('addVarBtn').addEventListener('click', ()=>{
-  calcState.varItems.push({id:uid(), name:'Новая статья', basis:'ton', value:0});
-  renderVarRows(); renderAll();
-});
-
-document.getElementById('stepRows').addEventListener('input', e=>{
-  const t=e.target;
-  const id = t.dataset.sName||t.dataset.sThreshold||t.dataset.sCost||t.dataset.sMin;
-  const it = calcState.stepItems.find(i=>i.id===id); if(!it) return;
-  if(t.dataset.sName) it.name=t.value;
-  if(t.dataset.sThreshold) it.threshold=Number(t.value)||1;
-  if(t.dataset.sCost) it.cost=Number(t.value)||0;
-  if(t.dataset.sMin) it.minSteps=Number(t.value)||0;
-  renderAll();
-});
-document.getElementById('stepRows').addEventListener('click', e=>{
-  if(e.target.dataset.sDel){
-    calcState.stepItems = calcState.stepItems.filter(i=>i.id!==e.target.dataset.sDel);
-    renderStepRows(); renderAll();
-  }
-});
-document.getElementById('addStepBtn').addEventListener('click', ()=>{
-  calcState.stepItems.push({id:uid(), name:'Новая ступень', threshold:5000, cost:100000, minSteps:0});
-  renderStepRows(); renderAll();
-});
-
-document.getElementById('fixedRows').addEventListener('input', e=>{
-  const t=e.target;
-  const id=t.dataset.fName||t.dataset.fValue;
-  const it=calcState.fixedItems.find(i=>i.id===id); if(!it) return;
-  if(t.dataset.fName) it.name=t.value;
-  if(t.dataset.fValue) it.value=Number(t.value)||0;
-  renderAll();
-});
-document.getElementById('fixedRows').addEventListener('click', e=>{
-  if(e.target.dataset.fDel){
-    calcState.fixedItems = calcState.fixedItems.filter(i=>i.id!==e.target.dataset.fDel);
-    renderFixedRows(); renderAll();
-  }
-});
-document.getElementById('addFixedBtn').addEventListener('click', ()=>{
-  calcState.fixedItems.push({id:uid(), name:'Новая статья', value:0});
-  renderFixedRows(); renderAll();
-});
 
 /* ---- top-level sliders ---- */
 function linkPair(rangeEl, numberEl, onChange){
@@ -985,15 +896,13 @@ function linkPair(rangeEl, numberEl, onChange){
     onChange();
   });
 }
-const elFleet = document.getElementById('c-fleet');
 const elRate = document.getElementById('c-rate'), elRateRange = document.getElementById('c-rate-range');
 const elUtil = document.getElementById('c-util'), elUtilRange = document.getElementById('c-util-range');
 const elDays = document.getElementById('c-days');
 
-elFleet.addEventListener('input', ()=>{ calcState.fleetTons=Number(elFleet.value)||0; renderAll(); });
 elDays.addEventListener('input', ()=>{ calcState.days=Number(elDays.value)||1; renderAll(); });
-linkPair(elRateRange, elRate, ()=>{ calcState.rate=Number(elRate.value)||0; renderAll(); });
-linkPair(elUtilRange, elUtil, ()=>{ calcState.utilization=Number(elUtil.value)||0; renderAll(); });
+linkPair(elRateRange, elRate, ()=>{ calcState.rate=Number(elRate.value)||0; calcState.rateAuto=false; renderAll(); });
+linkPair(elUtilRange, elUtil, ()=>{ calcState.utilization=Number(elUtil.value)||0; calcState.utilizationAuto=false; renderAll(); });
 
 /* ---- KPIs ---- */
 function renderKPIs(){
@@ -1004,7 +913,6 @@ function renderKPIs(){
 
   document.getElementById('k-revenue').textContent = fmtRub(r.revenue);
   document.getElementById('k-var').textContent = fmtRub(r.variableCosts);
-  document.getElementById('k-step').textContent = fmtRub(r.stepTotal);
   document.getElementById('k-fixed').textContent = fmtRub(r.fixed);
   document.getElementById('k-total').textContent = fmtRub(r.totalCosts);
   document.getElementById('k-profit').textContent = fmtRub(r.profit);
@@ -1026,7 +934,6 @@ function renderKPIs(){
   else { beRateEl.textContent = fmtRub(be.value)+'/т/сут'; }
 
   document.getElementById('varTotal').textContent = fmtRub(r.revenue*varPctSum()/100 + r.utilizedTons*varTonSum());
-  document.getElementById('stepTotal').textContent = fmtRub(r.stepTotal);
   document.getElementById('fixedTotal').textContent = fmtRub(r.fixed);
 
   const pctSum = varPctSum();
@@ -1086,13 +993,6 @@ function renderLineChart(){
     svgc += '<text x="'+(mL-8)+'" y="'+(yy+4)+'" fill="'+th.inkMuted+'" font-size="10.5" text-anchor="end">'+fmtCompact(v)+'</text>';
   });
 
-  // step thresholds
-  calcState.stepItems.forEach(it=>{
-    const u = calcState.fleetTons>0 ? it.threshold/calcState.fleetTons*100 : null;
-    if(u!==null && u>0 && u<=100){
-      svgc += '<line x1="'+x(u)+'" y1="'+mT+'" x2="'+x(u)+'" y2="'+(mT+plotH)+'" stroke="'+th.accent+'" stroke-width="1" stroke-dasharray="3,3" opacity="0.55"/>';
-    }
-  });
 
   svgc += '<path d="'+areaD+'" fill="url(#profGrad)" stroke="none"/>';
   svgc += '<path d="'+d+'" fill="none" stroke="'+th.ink2+'" stroke-width="2"/>';
@@ -1191,9 +1091,6 @@ function renderAll(){
   renderHeatmap();
 }
 
-/* ---- initial render of calc sidebar ---- */
-renderVarRows(); renderStepRows(); renderFixedRows();
-
 /* =========================================================
    Tabs
    ========================================================= */
@@ -1210,37 +1107,8 @@ function showTab(name){
 tabbtnData.addEventListener('click', ()=>showTab('data'));
 tabbtnCalc.addEventListener('click', ()=>showTab('calc'));
 
-/* ---- transfer button ---- */
-document.getElementById('transferBtn').addEventListener('click', ()=>{
-  const newVar=[], newStep=[], newFixed=[];
-  dataState.costItems.forEach(ci=>{
-    const c = dataState.classification[ci.id];
-    if(!c) return;
-    if(c.type==='variable') newVar.push({id:uid(), name:ci.name, basis:c.basis, value:c.varValue});
-    else if(c.type==='step') newStep.push({id:uid(), name:ci.name, threshold:c.threshold, cost:c.stepCost, minSteps:c.minSteps});
-    else newFixed.push({id:uid(), name:ci.name, value:c.fixedValue});
-  });
-  calcState.varItems = newVar.length?newVar:calcState.varItems;
-  calcState.stepItems = newStep.length?newStep:calcState.stepItems;
-  calcState.fixedItems = newFixed.length?newFixed:calcState.fixedItems;
-  calcState.fleetTons = dataState.fleetTons || calcState.fleetTons;
-
-  const validMonths = dataState.months.filter(m=>m.tons>0 && m.revenue>0);
-  if(validMonths.length){
-    const rates = validMonths.map(m=> m.revenue/(m.tons*30));
-    calcState.rate = Math.round(mean(rates));
-    const avgTons = mean(validMonths.map(m=>m.tons));
-    calcState.utilization = calcState.fleetTons>0 ? Math.min(100, Math.round(avgTons/calcState.fleetTons*1000)/10) : calcState.utilization;
-  }
-
-  elFleet.value = calcState.fleetTons;
-  elRate.value = calcState.rate; elRateRange.value = Math.min(elRateRange.max, calcState.rate);
-  elUtil.value = calcState.utilization; elUtilRange.value = calcState.utilization;
-
-  renderVarRows(); renderStepRows(); renderFixedRows();
-  document.getElementById('transferMsg').textContent = 'Перенесено: '+newVar.length+' перем., '+newStep.length+' ступ., '+newFixed.length+' пост. Открываю калькулятор…';
-  showTab('calc');
-});
+/* ---- go to calculator (data/classification already synced automatically) ---- */
+document.getElementById('transferBtn').addEventListener('click', ()=> showTab('calc'));
 
 /* ---- theme change redraw ---- */
 const mq = window.matchMedia('(prefers-color-scheme: dark)');
@@ -1273,9 +1141,9 @@ function applyAppState(saved){
   let maxN=0;
   JSON.stringify(saved).replace(/"id(\d+)"/g, (m,n)=>{ maxN=Math.max(maxN, Number(n)); return m; });
   uidc = Math.max(uidc, maxN+1);
+  calcState.rateAuto = false;
+  calcState.utilizationAuto = false;
   refreshDataTab();
-  renderVarRows(); renderStepRows(); renderFixedRows();
-  elFleet.value = calcState.fleetTons;
   elRate.value = calcState.rate; elRateRange.value = Math.min(Number(elRateRange.max), calcState.rate);
   elUtil.value = calcState.utilization; elUtilRange.value = calcState.utilization;
   elDays.value = calcState.days;
