@@ -366,8 +366,8 @@ table.heat td.current-col{outline:2px solid var(--accent);outline-offset:-2px;}
    Заполняется после создания проекта на supabase.com (см. tools/README.md).
    SUPABASE_ANON_KEY — публичный ключ, его можно хранить в клиентском коде:
    доступ к данным всё равно ограничен политиками Row Level Security в базе. */
-const SUPABASE_URL = "__SUPABASE_URL__";
-const SUPABASE_ANON_KEY = "__SUPABASE_ANON_KEY__";
+const SUPABASE_URL = "https://khzxfhxpcrjshsssghok.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_rrwlI1VXeWmQJ1Zn3YT3Ow_pUK04-ha";
 const SUPABASE_CONFIGURED = SUPABASE_URL.indexOf('http')===0 && SUPABASE_ANON_KEY.length>20;
 const sb = SUPABASE_CONFIGURED ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
